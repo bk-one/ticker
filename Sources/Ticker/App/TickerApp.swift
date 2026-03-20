@@ -5,17 +5,16 @@ import TickerKit
 @MainActor
 struct TickerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    private let store = TickerStore()
-
-    init() {
-        store.start()
-    }
+    @StateObject private var store = TickerStore()
 
     var body: some Scene {
         MenuBarExtra {
             MenuBarContentView(model: store)
         } label: {
             MenuBarLabel(model: store)
+                .task {
+                    store.start()
+                }
         }
         .menuBarExtraStyle(.window)
     }
