@@ -44,6 +44,7 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
     public let asOf: Date
     public let intradayCloses: [Double]
     public let priceHint: Int?
+    public let granularityMinutes: Int?
 
     public var id: String { symbol }
 
@@ -60,11 +61,19 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
     }
 
     public var fifteenMinuteReferencePrice: Double? {
-        guard intradayCloses.count >= 4 else {
+        guard let granularityMinutes,
+              granularityMinutes > 0 else {
             return nil
         }
 
-        return intradayCloses[intradayCloses.count - 4]
+        let stepsBack = 15 / granularityMinutes
+
+        guard stepsBack > 0,
+              intradayCloses.count > stepsBack else {
+            return nil
+        }
+
+        return intradayCloses[intradayCloses.count - 1 - stepsBack]
     }
 
     public var fifteenMinutePercentChange: Double? {
@@ -93,7 +102,8 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         instrumentType: String,
         asOf: Date,
         intradayCloses: [Double],
-        priceHint: Int?
+        priceHint: Int?,
+        granularityMinutes: Int? = nil
     ) {
         self.symbol = symbol
         self.displayName = displayName
@@ -105,6 +115,7 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         self.asOf = asOf
         self.intradayCloses = intradayCloses
         self.priceHint = priceHint
+        self.granularityMinutes = granularityMinutes
     }
 
     private func percentageChange(from referencePrice: Double?) -> Double? {

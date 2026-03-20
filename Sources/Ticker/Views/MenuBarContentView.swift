@@ -106,8 +106,7 @@ struct MenuBarContentView: View {
         if let quote = model.quote {
             VStack(alignment: .leading, spacing: 12) {
                 Text(model.displaySymbol)
-                    .font(.system(size: 20, weight: .semibold))
-                    .fontWidth(.condensed)
+                    .font(.custom("HelveticaNeue-CondensedBold", size: 20))
 
                 Text(quote.displayName)
                     .font(.subheadline)
@@ -142,8 +141,7 @@ struct MenuBarContentView: View {
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 Text(QuoteFormatting.loadingPlaceholder(for: model.displaySymbol))
-                    .font(.system(size: 28, weight: .semibold))
-                    .fontWidth(.condensed)
+                    .font(.custom("HelveticaNeue-CondensedBold", size: 28))
                     .monospacedDigit()
 
                 Text("Loading the first live quote. The menu bar stays populated instead of showing a blank state.")
@@ -167,7 +165,7 @@ struct MenuBarContentView: View {
 
     private var footer: some View {
         HStack {
-            Text("Refreshes every 60 seconds")
+            Text("Refreshes every 15 seconds")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 

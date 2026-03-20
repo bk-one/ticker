@@ -18,21 +18,25 @@ enum QuoteFormatting {
     }
 
     static func color(for quote: MarketQuote?) -> Color {
+        Color(nsColor: nsColor(for: quote))
+    }
+
+    static func nsColor(for quote: MarketQuote?) -> NSColor {
         guard let tone = quote?.tone else {
-            return .primary
+            return .labelColor
         }
 
         switch tone.direction {
         case .neutral:
-            return .primary
+            return .labelColor
         case .up:
-            return mixedColor(
+            return mixedNSColor(
                 from: .labelColor,
                 to: .systemGreen,
                 factor: 0.35 + (tone.intensity * 0.65)
             )
         case .down:
-            return mixedColor(
+            return mixedNSColor(
                 from: .labelColor,
                 to: .systemRed,
                 factor: 0.35 + (tone.intensity * 0.65)
@@ -48,7 +52,7 @@ enum QuoteFormatting {
         date.formatted(date: .omitted, time: .shortened)
     }
 
-    private static func mixedColor(from: NSColor, to: NSColor, factor: Double) -> Color {
+    private static func mixedNSColor(from: NSColor, to: NSColor, factor: Double) -> NSColor {
         let clampedFactor = min(max(factor, 0), 1)
         let source = from.usingColorSpace(.sRGB) ?? from
         let target = to.usingColorSpace(.sRGB) ?? to
@@ -58,13 +62,11 @@ enum QuoteFormatting {
         let blue = source.blueComponent + ((target.blueComponent - source.blueComponent) * clampedFactor)
         let alpha = source.alphaComponent + ((target.alphaComponent - source.alphaComponent) * clampedFactor)
 
-        return Color(
-            nsColor: NSColor(
-                red: red,
-                green: green,
-                blue: blue,
-                alpha: alpha
-            )
+        return NSColor(
+            red: red,
+            green: green,
+            blue: blue,
+            alpha: alpha
         )
     }
 }

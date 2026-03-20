@@ -15,7 +15,7 @@ macOS menu bar app prototype that bootstraps with `AAPL` and renders live Yahoo 
 - Price color derived from the last 15 minutes when possible.
 - Fallback to the last active trading day when 15-minute comparison data is unavailable.
 - Loading placeholder on cold launch instead of a blank menu bar item.
-- Automatic 60-second refresh.
+- Automatic 15-second refresh.
 - Shared quote/rendering path that works for stocks, commodities, and crypto symbols internally.
 
 ## Yahoo Finance research snapshot

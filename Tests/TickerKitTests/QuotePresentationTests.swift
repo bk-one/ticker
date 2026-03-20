@@ -26,8 +26,9 @@ struct QuotePresentationTests {
             exchangeName: "NasdaqGS",
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
-            intradayCloses: [100, 101, 102, 103],
-            priceHint: 2
+            intradayCloses: Array(repeating: 100, count: 15) + [103],
+            priceHint: 2,
+            granularityMinutes: 1
         )
 
         #expect(quote.tone?.basis == .fifteenMinutes)
@@ -47,7 +48,8 @@ struct QuotePresentationTests {
             instrumentType: "CRYPTOCURRENCY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [95],
-            priceHint: 2
+            priceHint: 2,
+            granularityMinutes: 1
         )
 
         #expect(quote.tone?.basis == .previousCloseFallback)
@@ -68,7 +70,8 @@ struct QuotePresentationTests {
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [100.0],
-            priceHint: 2
+            priceHint: 2,
+            granularityMinutes: 1
         )
 
         #expect(quote.tone?.basis == .previousCloseFallback)

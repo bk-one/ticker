@@ -40,6 +40,7 @@ struct YahooSparkMeta: Decodable {
     let exchangeName: String?
     let instrumentType: String?
     let priceHint: Int?
+    let dataGranularity: String?
 }
 
 struct YahooErrorEnvelope: Decodable {

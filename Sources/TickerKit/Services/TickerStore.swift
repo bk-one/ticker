@@ -17,7 +17,7 @@ public final class TickerStore: ObservableObject {
 
     public init(
         client: YahooFinanceClientProtocol = YahooFinanceClient(),
-        refreshInterval: Duration = .seconds(60)
+        refreshInterval: Duration = .seconds(15)
     ) {
         self.client = client
         self.refreshInterval = refreshInterval
