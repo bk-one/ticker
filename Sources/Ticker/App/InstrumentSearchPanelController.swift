@@ -12,7 +12,7 @@ final class InstrumentSearchPanelController: NSObject, NSWindowDelegate {
     )
     private lazy var panel: InstrumentSearchPanel = {
         let panel = InstrumentSearchPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 620, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 548, height: 468),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false

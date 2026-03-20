@@ -50,8 +50,23 @@ final class StatusBarController: NSObject {
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 360, height: 480)
-        popover.contentViewController = NSHostingController(rootView: MenuBarContentView(model: store))
+        popover.contentSize = NSSize(width: 356, height: 320)
+        popover.contentViewController = NSHostingController(
+            rootView: MenuBarContentView(
+                model: store,
+                onAddInstrument: { [weak self] in
+                    guard let self else {
+                        return
+                    }
+
+                    self.popover.performClose(nil)
+
+                    if let button = self.statusItem.button {
+                        self.toggleSearchPanel(relativeTo: button)
+                    }
+                }
+            )
+        )
     }
 
     private func observeStore() {
@@ -59,6 +74,7 @@ final class StatusBarController: NSObject {
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
                     self?.updateStatusButton()
+                    self?.updatePopoverSize()
                 }
             }
             .store(in: &cancellables)
@@ -95,6 +111,7 @@ final class StatusBarController: NSObject {
             return
         }
 
+        updatePopoverSize()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
 
@@ -105,5 +122,18 @@ final class StatusBarController: NSObject {
     private func isSecondaryClick(_ event: NSEvent) -> Bool {
         event.type == .rightMouseUp
             || (event.type == .leftMouseUp && event.modifierFlags.contains(.control))
+    }
+
+    private func updatePopoverSize() {
+        guard let contentView = popover.contentViewController?.view else {
+            return
+        }
+
+        contentView.layoutSubtreeIfNeeded()
+        let fittingSize = contentView.fittingSize
+        popover.contentSize = NSSize(
+            width: max(320, fittingSize.width),
+            height: max(1, fittingSize.height)
+        )
     }
 }

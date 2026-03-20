@@ -5,6 +5,7 @@ public struct InstrumentSearchResult: Identifiable, Equatable, Sendable {
     public let displayName: String
     public let label: String
     public let quoteType: String
+    public let currentPrice: Double?
 
     public var id: String { symbol }
 
@@ -12,11 +13,13 @@ public struct InstrumentSearchResult: Identifiable, Equatable, Sendable {
         symbol: String,
         displayName: String,
         label: String,
-        quoteType: String
+        quoteType: String,
+        currentPrice: Double? = nil
     ) {
         self.symbol = symbol
         self.displayName = displayName
         self.label = label
         self.quoteType = quoteType
+        self.currentPrice = currentPrice
     }
 }

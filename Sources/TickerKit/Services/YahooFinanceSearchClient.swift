@@ -28,9 +28,14 @@ public enum YahooFinanceSearchError: LocalizedError, Equatable {
 
 public struct YahooFinanceSearchClient: YahooFinanceSearchClientProtocol, Sendable {
     private let session: URLSession
+    private let quoteClient: any YahooFinanceClientProtocol
 
-    public init(session: URLSession = .shared) {
+    public init(
+        session: URLSession = .shared,
+        quoteClient: any YahooFinanceClientProtocol = YahooFinanceClient()
+    ) {
         self.session = session
+        self.quoteClient = quoteClient
     }
 
     public func search(query: String, limit: Int = 8) async throws -> [InstrumentSearchResult] {
@@ -73,7 +78,18 @@ public struct YahooFinanceSearchClient: YahooFinanceSearchClientProtocol, Sendab
             )
         }
 
-        return try decodeResults(from: data)
+        let decodedResults = try decodeResults(from: data)
+
+        guard !decodedResults.isEmpty else {
+            return []
+        }
+
+        do {
+            let marketBatch = try await quoteClient.fetchQuotes(for: decodedResults.map(\.symbol))
+            return applyingPrices(from: marketBatch, to: decodedResults)
+        } catch {
+            return decodedResults
+        }
     }
 
     func decodeResults(from data: Data) throws -> [InstrumentSearchResult] {
@@ -112,6 +128,27 @@ public struct YahooFinanceSearchClient: YahooFinanceSearchClientProtocol, Sendab
         }
 
         return results
+    }
+
+    func applyingPrices(
+        from batch: MarketBatch,
+        to results: [InstrumentSearchResult]
+    ) -> [InstrumentSearchResult] {
+        let quotesBySymbol = Dictionary(
+            uniqueKeysWithValues: batch.quotes.map { quote in
+                (quote.symbol, quote)
+            }
+        )
+
+        return results.map { result in
+            InstrumentSearchResult(
+                symbol: result.symbol,
+                displayName: result.displayName,
+                label: result.label,
+                quoteType: result.quoteType,
+                currentPrice: quotesBySymbol[result.symbol]?.currentPrice
+            )
+        }
     }
 
     private static func label(for quote: YahooSearchQuotePayload, symbol: String) -> String {

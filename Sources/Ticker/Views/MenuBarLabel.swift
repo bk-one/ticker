@@ -4,38 +4,7 @@ import TickerKit
 @MainActor
 enum MenuBarLabelRenderer {
     static func image(for model: TickerStore) -> NSImage {
-        let attributedString = NSMutableAttributedString()
-
-        if model.hasTrackedSymbols {
-            attributedString.append(
-                NSAttributedString(
-                    string: "\(model.displaySymbol) ",
-                    attributes: [
-                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
-                        .foregroundColor: NSColor.labelColor,
-                    ]
-                )
-            )
-            attributedString.append(
-                NSAttributedString(
-                    string: priceText(for: model),
-                    attributes: [
-                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
-                        .foregroundColor: QuoteFormatting.nsColor(for: model.quote),
-                    ]
-                )
-            )
-        } else {
-            attributedString.append(
-                NSAttributedString(
-                    string: TickerStore.emptyStateLabel,
-                    attributes: [
-                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
-                        .foregroundColor: NSColor.labelColor,
-                    ]
-                )
-            )
-        }
+        let attributedString = attributedTitle(for: model)
 
         let boundingRect = attributedString.boundingRect(
             with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
@@ -55,14 +24,81 @@ enum MenuBarLabelRenderer {
             return TickerStore.emptyStateLabel
         }
 
-        return "\(model.displaySymbol) \(priceText(for: model))"
+        return model.trackedSymbols
+            .map { symbol in
+                "\(symbol) \(priceText(for: model.quote(for: symbol)))"
+            }
+            .joined(separator: ", ")
     }
 
-    private static func priceText(for model: TickerStore) -> String {
-        guard let quote = model.quote else {
+    private static func attributedTitle(for model: TickerStore) -> NSMutableAttributedString {
+        let attributedString = NSMutableAttributedString()
+
+        guard model.hasTrackedSymbols else {
+            attributedString.append(
+                NSAttributedString(
+                    string: TickerStore.emptyStateLabel,
+                    attributes: symbolAttributes
+                )
+            )
+            return attributedString
+        }
+
+        for (index, symbol) in model.trackedSymbols.enumerated() {
+            if index > 0 {
+                attributedString.append(
+                    NSAttributedString(
+                        string: "  •  ",
+                        attributes: separatorAttributes
+                    )
+                )
+            }
+
+            let quote = model.quote(for: symbol)
+
+            attributedString.append(
+                NSAttributedString(
+                    string: "\(symbol) ",
+                    attributes: symbolAttributes
+                )
+            )
+            attributedString.append(
+                NSAttributedString(
+                    string: priceText(for: quote),
+                    attributes: priceAttributes(color: QuoteFormatting.nsColor(for: quote))
+                )
+            )
+        }
+
+        return attributedString
+    }
+
+    private static func priceText(for quote: MarketQuote?) -> String {
+        guard let quote else {
             return "--"
         }
 
         return QuoteFormatting.price(quote)
+    }
+
+    private static var symbolAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
+            .foregroundColor: NSColor.labelColor,
+        ]
+    }
+
+    private static var separatorAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+    }
+
+    private static func priceAttributes(color: NSColor) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
+            .foregroundColor: color,
+        ]
     }
 }

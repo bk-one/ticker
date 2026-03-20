@@ -5,6 +5,7 @@ import Foundation
 public final class TickerStore: ObservableObject {
     public static let bootstrapSymbol = "AAPL"
     public static let trackedSymbolsDefaultsKey = "tracked_symbols"
+    public static let displaySymbolDefaultsKey = "display_symbol"
     public static let emptyStateLabel = "Click to add ticker"
 
     @Published public private(set) var trackedSymbols: [String]
@@ -17,19 +18,23 @@ public final class TickerStore: ObservableObject {
     private let client: YahooFinanceClientProtocol
     private let defaults: UserDefaults
     private let trackedSymbolsKey: String
+    private let displaySymbolKey: String
     private let refreshInterval: Duration
     private var autoRefreshTask: Task<Void, Never>?
     private var hasStarted = false
     private var trackedQuotesBySymbol: [String: MarketQuote] = [:]
+    private var selectedDisplaySymbol: String?
 
     public init(
         client: YahooFinanceClientProtocol = YahooFinanceClient(),
         refreshInterval: Duration = .seconds(15),
         defaults: UserDefaults = .standard,
-        trackedSymbolsKey: String = TickerStore.trackedSymbolsDefaultsKey
+        trackedSymbolsKey: String = TickerStore.trackedSymbolsDefaultsKey,
+        displaySymbolKey: String = TickerStore.displaySymbolDefaultsKey
     ) {
         self.defaults = defaults
         self.trackedSymbolsKey = trackedSymbolsKey
+        self.displaySymbolKey = displaySymbolKey
         self.client = client
         self.refreshInterval = refreshInterval
 
@@ -41,6 +46,17 @@ public final class TickerStore: ObservableObject {
         } else {
             self.trackedSymbols = normalizedSymbols
         }
+
+        let persistedDisplaySymbol = YahooFinanceClient.normalizedSymbols(
+            from: defaults.string(forKey: displaySymbolKey).map { [$0] } ?? []
+        ).first
+
+        if let persistedDisplaySymbol,
+           self.trackedSymbols.contains(persistedDisplaySymbol) {
+            self.selectedDisplaySymbol = persistedDisplaySymbol
+        } else {
+            self.selectedDisplaySymbol = self.trackedSymbols.first
+        }
     }
 
     deinit {
@@ -48,7 +64,7 @@ public final class TickerStore: ObservableObject {
     }
 
     public var displaySymbol: String {
-        trackedSymbols.first ?? Self.emptyStateLabel
+        selectedDisplaySymbol ?? trackedSymbols.first ?? Self.emptyStateLabel
     }
 
     public var hasTrackedSymbols: Bool {
@@ -116,10 +132,41 @@ public final class TickerStore: ObservableObject {
         }
 
         trackedSymbols.append(normalizedSymbol)
+        selectedDisplaySymbol = normalizedSymbol
+        quote = trackedQuotesBySymbol[normalizedSymbol]
         persistTrackedSymbols()
+        persistDisplaySymbol()
         errorMessage = nil
 
         await refresh()
+        return true
+    }
+
+    @discardableResult
+    public func removeInstrument(symbol: String) -> Bool {
+        guard let normalizedSymbol = YahooFinanceClient.normalizedSymbols(from: [symbol]).first,
+              let index = trackedSymbols.firstIndex(of: normalizedSymbol) else {
+            return false
+        }
+
+        trackedSymbols.remove(at: index)
+        trackedQuotesBySymbol.removeValue(forKey: normalizedSymbol)
+        trackedQuotes.removeAll { $0.symbol == normalizedSymbol }
+
+        if selectedDisplaySymbol == normalizedSymbol {
+            selectedDisplaySymbol = trackedSymbols.first
+        }
+
+        quote = trackedQuotesBySymbol[displaySymbol]
+        errorMessage = nil
+
+        if trackedSymbols.isEmpty {
+            lastUpdated = nil
+            selectedDisplaySymbol = nil
+        }
+
+        persistTrackedSymbols()
+        persistDisplaySymbol()
         return true
     }
 
@@ -134,6 +181,8 @@ public final class TickerStore: ObservableObject {
             quote = nil
             lastUpdated = nil
             errorMessage = nil
+            selectedDisplaySymbol = nil
+            persistDisplaySymbol()
             return
         }
 
@@ -151,9 +200,8 @@ public final class TickerStore: ObservableObject {
                 trackedQuotesBySymbol[symbol]
             }
 
-            if let displaySymbol = trackedSymbols.first {
-                quote = trackedQuotesBySymbol[displaySymbol]
-            }
+            syncDisplaySymbol()
+            quote = trackedQuotesBySymbol[displaySymbol]
 
             if let newestQuoteDate = trackedQuotes.map(\.asOf).max() {
                 lastUpdated = newestQuoteDate
@@ -176,5 +224,19 @@ public final class TickerStore: ObservableObject {
 
     private func persistTrackedSymbols() {
         defaults.set(trackedSymbols, forKey: trackedSymbolsKey)
+    }
+
+    private func persistDisplaySymbol() {
+        defaults.set(selectedDisplaySymbol, forKey: displaySymbolKey)
+    }
+
+    private func syncDisplaySymbol() {
+        if let selectedDisplaySymbol,
+           trackedSymbols.contains(selectedDisplaySymbol) {
+            return
+        }
+
+        selectedDisplaySymbol = trackedSymbols.first
+        persistDisplaySymbol()
     }
 }
