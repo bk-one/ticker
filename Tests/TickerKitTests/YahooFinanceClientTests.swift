@@ -1,0 +1,88 @@
+import Foundation
+import Testing
+@testable import TickerKit
+
+struct YahooFinanceClientTests {
+    @Test
+    func normalizesSymbolsAndKeepsFirstOccurrence() {
+        let symbols = YahooFinanceClient.normalizedSymbols(
+            from: [" aapl ", "GC=F", "AAPL", "", " msft "]
+        )
+
+        #expect(symbols == ["AAPL", "GC=F", "MSFT"])
+    }
+
+    @Test
+    func decodesBatchInRequestedOrderAndMarksMissingSymbols() throws {
+        let payload = """
+        {
+          "spark": {
+            "result": [
+              {
+                "symbol": "AAPL",
+                "response": [
+                  {
+                    "meta": {
+                      "symbol": "AAPL",
+                      "shortName": "Apple Inc.",
+                      "currency": "USD",
+                      "regularMarketPrice": 248.25,
+                      "previousClose": 248.96,
+                      "regularMarketTime": 1774031733,
+                      "fullExchangeName": "NasdaqGS",
+                      "instrumentType": "EQUITY",
+                      "priceHint": 2
+                    },
+                    "indicators": {
+                      "quote": [
+                        {
+                          "close": [247.14, 247.68, 248.25]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "symbol": "GC=F",
+                "response": [
+                  {
+                    "meta": {
+                      "symbol": "GC=F",
+                      "shortName": "Gold Apr 26",
+                      "currency": "USD",
+                      "regularMarketPrice": 4564.5,
+                      "previousClose": 4994.0,
+                      "regularMarketTime": 1774030902,
+                      "fullExchangeName": "COMEX",
+                      "instrumentType": "FUTURE",
+                      "priceHint": 2
+                    },
+                    "indicators": {
+                      "quote": [
+                        {
+                          "close": [4994.0, 4600.7, 4564.5]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "error": null
+          }
+        }
+        """
+
+        let client = YahooFinanceClient()
+        let batch = try client.decodeMarketBatch(
+            from: Data(payload.utf8),
+            requestedSymbols: ["GC=F", "MISSING", "AAPL"]
+        )
+
+        #expect(batch.quotes.map(\.symbol) == ["GC=F", "AAPL"])
+        #expect(batch.missingSymbols == ["MISSING"])
+        #expect(batch.quotes.first?.displayName == "Gold Apr 26")
+        #expect(batch.quotes.first?.intradayCloses.last == 4564.5)
+    }
+}
