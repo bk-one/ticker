@@ -1,47 +1,41 @@
 import AppKit
-import SwiftUI
 import TickerKit
 
-struct MenuBarLabel: View {
-    @ObservedObject var model: TickerStore
+@MainActor
+enum MenuBarLabelRenderer {
+    static func image(for model: TickerStore) -> NSImage {
+        let attributedString = NSMutableAttributedString()
 
-    var body: some View {
-        Image(nsImage: labelImage)
-            .renderingMode(.original)
-            .interpolation(.high)
-            .accessibilityLabel("\(model.displaySymbol) \(priceText)")
-            .id(refreshIdentity)
-    }
-
-    private var priceText: String {
-        guard let quote = model.quote else {
-            return "--"
+        if model.hasTrackedSymbols {
+            attributedString.append(
+                NSAttributedString(
+                    string: "\(model.displaySymbol) ",
+                    attributes: [
+                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
+                        .foregroundColor: NSColor.labelColor,
+                    ]
+                )
+            )
+            attributedString.append(
+                NSAttributedString(
+                    string: priceText(for: model),
+                    attributes: [
+                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
+                        .foregroundColor: QuoteFormatting.nsColor(for: model.quote),
+                    ]
+                )
+            )
+        } else {
+            attributedString.append(
+                NSAttributedString(
+                    string: TickerStore.emptyStateLabel,
+                    attributes: [
+                        .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
+                        .foregroundColor: NSColor.labelColor,
+                    ]
+                )
+            )
         }
-
-        return QuoteFormatting.price(quote)
-    }
-
-    private var refreshIdentity: String {
-        let timestamp = model.quote?.asOf.timeIntervalSinceReferenceDate ?? 0
-        return "\(priceText)-\(timestamp)"
-    }
-
-    private var labelImage: NSImage {
-        let symbolAttributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
-            .foregroundColor: NSColor.labelColor,
-        ]
-
-        let priceAttributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
-            .foregroundColor: QuoteFormatting.nsColor(for: model.quote),
-        ]
-
-        let attributedString = NSMutableAttributedString(
-            string: "\(model.displaySymbol) ",
-            attributes: symbolAttributes
-        )
-        attributedString.append(NSAttributedString(string: priceText, attributes: priceAttributes))
 
         let boundingRect = attributedString.boundingRect(
             with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
@@ -54,5 +48,21 @@ struct MenuBarLabel: View {
         attributedString.draw(at: NSPoint(x: -boundingRect.origin.x, y: -boundingRect.origin.y))
         image.unlockFocus()
         return image
+    }
+
+    static func accessibilityLabel(for model: TickerStore) -> String {
+        guard model.hasTrackedSymbols else {
+            return TickerStore.emptyStateLabel
+        }
+
+        return "\(model.displaySymbol) \(priceText(for: model))"
+    }
+
+    private static func priceText(for model: TickerStore) -> String {
+        guard let quote = model.quote else {
+            return "--"
+        }
+
+        return QuoteFormatting.price(quote)
     }
 }

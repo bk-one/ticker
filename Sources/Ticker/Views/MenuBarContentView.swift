@@ -27,11 +27,12 @@ struct MenuBarContentView: View {
                 header
                 statusBanner
                 quoteCard
+                trackedListCard
                 footer
             }
             .padding(16)
         }
-        .frame(width: 340)
+        .frame(width: 360)
     }
 
     private var header: some View {
@@ -40,7 +41,7 @@ struct MenuBarContentView: View {
                 Text("Ticker")
                     .font(.system(size: 22, weight: .black, design: .rounded))
 
-                Text("Bootstrapped menu bar display for the default \(model.displaySymbol) ticker.")
+                Text("Right-click status menu for tracked instruments. Left-click the menu bar item to add more.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -89,7 +90,10 @@ struct MenuBarContentView: View {
                         .fill(Color.black.opacity(0.04))
                 )
         } else {
-            Label("Loading live price for \(model.displaySymbol)", systemImage: "clock")
+            Label(
+                model.hasTrackedSymbols ? "Loading live price for \(model.displaySymbol)" : "No tracked instruments yet",
+                systemImage: "clock"
+            )
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(10)
@@ -140,13 +144,22 @@ struct MenuBarContentView: View {
             )
         } else {
             VStack(alignment: .leading, spacing: 8) {
-                Text(QuoteFormatting.loadingPlaceholder(for: model.displaySymbol))
-                    .font(.custom("HelveticaNeue-CondensedBold", size: 28))
-                    .monospacedDigit()
+                if model.hasTrackedSymbols {
+                    Text(QuoteFormatting.loadingPlaceholder(for: model.displaySymbol))
+                        .font(.custom("HelveticaNeue-CondensedBold", size: 28))
+                        .monospacedDigit()
 
-                Text("Loading the first live quote. The menu bar stays populated instead of showing a blank state.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    Text("Loading the first live quote for the currently displayed instrument.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(TickerStore.emptyStateLabel)
+                        .font(.custom("HelveticaNeue-CondensedBold", size: 28))
+
+                    Text("Left-click the menu bar item to open the add-instrument search dialog.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
                 if let message = model.errorMessage {
                     Text(message)
@@ -163,6 +176,38 @@ struct MenuBarContentView: View {
         }
     }
 
+    private var trackedListCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Tracked")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text("\(model.trackedSymbols.count)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.tertiary)
+            }
+
+            if model.trackedSymbols.isEmpty {
+                Text("No instruments tracked yet.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(model.trackedSymbols, id: \.self) { symbol in
+                    trackedRow(for: symbol)
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.black.opacity(0.04))
+        )
+    }
+
     private var footer: some View {
         HStack {
             Text("Refreshes every \(model.refreshIntervalDescription)")
@@ -176,6 +221,32 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.borderless)
         }
+    }
+
+    private func trackedRow(for symbol: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(symbol)
+                .font(.custom("HelveticaNeue-CondensedBold", size: 16))
+
+            Spacer()
+
+            if let trackedQuote = model.quote(for: symbol) {
+                Text(QuoteFormatting.price(trackedQuote))
+                    .monospacedDigit()
+                    .foregroundStyle(QuoteFormatting.color(for: trackedQuote))
+            } else {
+                Text("--")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+
+            if symbol == model.displaySymbol {
+                Text("Shown")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .font(.subheadline)
     }
 
     private func colorBasisLine(for quote: MarketQuote) -> String {
