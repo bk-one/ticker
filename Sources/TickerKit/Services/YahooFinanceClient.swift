@@ -155,19 +155,8 @@ public struct YahooFinanceClient: YahooFinanceClientProtocol, Sendable {
             instrumentType: payload.meta.instrumentType ?? "UNKNOWN",
             asOf: payload.meta.regularMarketTime.map(Date.init(timeIntervalSince1970:)) ?? Date(),
             intradayCloses: intradayCloses,
-            priceHint: payload.meta.priceHint,
-            granularityMinutes: Self.granularityMinutes(from: payload.meta.dataGranularity)
+            priceHint: payload.meta.priceHint
         )
-    }
-
-    private static func granularityMinutes(from value: String?) -> Int? {
-        guard let value,
-              let minuteSuffix = value.last,
-              minuteSuffix == "m" else {
-            return nil
-        }
-
-        return Int(value.dropLast())
     }
 
     private static func extractErrorMessage(from data: Data) -> String? {

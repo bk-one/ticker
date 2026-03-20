@@ -1,8 +1,7 @@
 import Foundation
 
 public enum QuoteColorBasis: String, Equatable, Sendable {
-    case fifteenMinutes
-    case previousCloseFallback
+    case lastClose
 }
 
 public enum QuoteTrendDirection: Equatable, Sendable {
@@ -44,7 +43,6 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
     public let asOf: Date
     public let intradayCloses: [Double]
     public let priceHint: Int?
-    public let granularityMinutes: Int?
 
     public var id: String { symbol }
 
@@ -60,33 +58,9 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         percentageChange(from: previousClose)
     }
 
-    public var fifteenMinuteReferencePrice: Double? {
-        guard let granularityMinutes,
-              granularityMinutes > 0 else {
-            return nil
-        }
-
-        let stepsBack = 15 / granularityMinutes
-
-        guard stepsBack > 0,
-              intradayCloses.count > stepsBack else {
-            return nil
-        }
-
-        return intradayCloses[intradayCloses.count - 1 - stepsBack]
-    }
-
-    public var fifteenMinutePercentChange: Double? {
-        percentageChange(from: fifteenMinuteReferencePrice)
-    }
-
     public var tone: QuoteTone? {
-        if let fifteenMinutePercentChange {
-            return QuoteTone(percentChange: fifteenMinutePercentChange, basis: .fifteenMinutes)
-        }
-
         if let percentChange {
-            return QuoteTone(percentChange: percentChange, basis: .previousCloseFallback)
+            return QuoteTone(percentChange: percentChange, basis: .lastClose)
         }
 
         return nil
@@ -102,8 +76,7 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         instrumentType: String,
         asOf: Date,
         intradayCloses: [Double],
-        priceHint: Int?,
-        granularityMinutes: Int? = nil
+        priceHint: Int?
     ) {
         self.symbol = symbol
         self.displayName = displayName
@@ -115,7 +88,6 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         self.asOf = asOf
         self.intradayCloses = intradayCloses
         self.priceHint = priceHint
-        self.granularityMinutes = granularityMinutes
     }
 
     private func percentageChange(from referencePrice: Double?) -> Double? {

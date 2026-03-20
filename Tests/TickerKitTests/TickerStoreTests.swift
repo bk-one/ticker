@@ -16,8 +16,7 @@ struct TickerStoreTests {
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [246.8, 247.2, 247.7, 248.02],
-            priceHint: 2,
-            granularityMinutes: 1
+            priceHint: 2
         )
 
         let store = TickerStore(
@@ -46,8 +45,7 @@ struct TickerStoreTests {
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [246.8, 247.2, 247.7, 248.02],
-            priceHint: 2,
-            granularityMinutes: 1
+            priceHint: 2
         )
 
         let client = MutableStubYahooFinanceClient(

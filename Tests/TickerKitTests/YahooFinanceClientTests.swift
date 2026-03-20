@@ -31,8 +31,7 @@ struct YahooFinanceClientTests {
                       "regularMarketTime": 1774031733,
                       "fullExchangeName": "NasdaqGS",
                       "instrumentType": "EQUITY",
-                      "priceHint": 2,
-                      "dataGranularity": "1m"
+                      "priceHint": 2
                     },
                     "indicators": {
                       "quote": [
@@ -57,8 +56,7 @@ struct YahooFinanceClientTests {
                       "regularMarketTime": 1774030902,
                       "fullExchangeName": "COMEX",
                       "instrumentType": "FUTURE",
-                      "priceHint": 2,
-                      "dataGranularity": "1m"
+                      "priceHint": 2
                     },
                     "indicators": {
                       "quote": [
@@ -86,6 +84,5 @@ struct YahooFinanceClientTests {
         #expect(batch.missingSymbols == ["MISSING"])
         #expect(batch.quotes.first?.displayName == "Gold Apr 26")
         #expect(batch.quotes.first?.intradayCloses.last == 4564.5)
-        #expect(batch.quotes.first?.granularityMinutes == 1)
     }
 }

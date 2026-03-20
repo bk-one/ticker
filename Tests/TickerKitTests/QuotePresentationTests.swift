@@ -16,7 +16,7 @@ struct QuotePresentationTests {
     }
 
     @Test
-    func prefersFifteenMinuteToneWhenEnoughIntradayDataExists() {
+    func derivesToneFromLastClose() {
         let quote = MarketQuote(
             symbol: "AAPL",
             displayName: "Apple Inc.",
@@ -26,18 +26,17 @@ struct QuotePresentationTests {
             exchangeName: "NasdaqGS",
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
-            intradayCloses: Array(repeating: 100, count: 15) + [103],
-            priceHint: 2,
-            granularityMinutes: 1
+            intradayCloses: [100, 101, 102, 103],
+            priceHint: 2
         )
 
-        #expect(quote.tone?.basis == .fifteenMinutes)
+        #expect(quote.tone?.basis == .lastClose)
         #expect(quote.tone?.direction == .up)
-        #expect(quote.tone?.percentChange == 3)
+        #expect(quote.tone?.percentChange == 5.1020408163265305)
     }
 
     @Test
-    func fallsBackToPreviousCloseWhenFifteenMinuteDataIsUnavailable() {
+    func derivesDownwardToneFromLastClose() {
         let quote = MarketQuote(
             symbol: "BTC-USD",
             displayName: "Bitcoin USD",
@@ -48,11 +47,10 @@ struct QuotePresentationTests {
             instrumentType: "CRYPTOCURRENCY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [95],
-            priceHint: 2,
-            granularityMinutes: 1
+            priceHint: 2
         )
 
-        #expect(quote.tone?.basis == .previousCloseFallback)
+        #expect(quote.tone?.basis == .lastClose)
         #expect(quote.tone?.direction == .down)
         #expect(quote.tone?.percentChange == -5)
         #expect(quote.tone?.intensity == 1)
@@ -70,11 +68,10 @@ struct QuotePresentationTests {
             instrumentType: "EQUITY",
             asOf: Date(timeIntervalSince1970: 1_774_031_733),
             intradayCloses: [100.0],
-            priceHint: 2,
-            granularityMinutes: 1
+            priceHint: 2
         )
 
-        #expect(quote.tone?.basis == .previousCloseFallback)
+        #expect(quote.tone?.basis == .lastClose)
         #expect(quote.tone?.direction == .neutral)
         #expect(quote.tone?.intensity == 0)
     }

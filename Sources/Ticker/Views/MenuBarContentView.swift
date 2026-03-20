@@ -180,12 +180,10 @@ struct MenuBarContentView: View {
 
     private func colorBasisLine(for quote: MarketQuote) -> String {
         switch quote.tone?.basis {
-        case .fifteenMinutes:
-            return "Color intensity is based on the last 15 minutes."
-        case .previousCloseFallback:
-            return "15-minute data unavailable. Color uses the last active trading day."
+        case .lastClose:
+            return "Color intensity is based on the last close."
         case nil:
-            return "Color stays neutral until comparison data is available."
+            return "Color stays neutral until last-close comparison data is available."
         }
     }
 }

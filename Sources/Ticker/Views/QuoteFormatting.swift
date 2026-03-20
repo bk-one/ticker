@@ -13,8 +13,7 @@ enum QuoteFormatting {
             return nil
         }
 
-        let basisLabel = tone.basis == .fifteenMinutes ? "vs 15m" : "vs last active day"
-        return "\(QuotePresentation.formattedSignedPercent(tone.percentChange)) \(basisLabel)"
+        return "\(QuotePresentation.formattedSignedPercent(tone.percentChange)) vs last close"
     }
 
     static func color(for quote: MarketQuote?) -> Color {

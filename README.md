@@ -12,8 +12,7 @@ macOS menu bar app prototype that bootstraps with `AAPL` and renders live Yahoo 
   - `10 ... 999.99`: 2 decimals
   - `1 ... 9.99`: 3 decimals
   - `< 1`: 4 decimals
-- Price color derived from the last 15 minutes when possible.
-- Fallback to the last active trading day when 15-minute comparison data is unavailable.
+- Price color derived from the last close.
 - Loading placeholder on cold launch instead of a blank menu bar item.
 - Automatic 15-second refresh.
 - Shared quote/rendering path that works for stocks, commodities, and crypto symbols internally.
@@ -30,7 +29,7 @@ Notes:
 
 - The Yahoo interface is unofficial and may break without notice.
 - The client is isolated in `TickerKit` so endpoint changes stay localized.
-- `spark` is the current best baseline because it batches symbols and includes enough intraday data to drive the 15-minute comparison.
+- `spark` is the current best baseline because it batches symbols and returns both the live price and previous close needed for the menu bar signal.
 
 ## Run it
 
