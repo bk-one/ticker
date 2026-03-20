@@ -8,7 +8,7 @@ public final class TickerStore: ObservableObject {
     @Published public private(set) var quote: MarketQuote?
     @Published public private(set) var isLoading = false
     @Published public private(set) var lastUpdated: Date?
-    @Published public var errorMessage: String?
+    @Published public private(set) var errorMessage: String?
 
     private let client: YahooFinanceClientProtocol
     private let refreshInterval: Duration
@@ -31,6 +31,20 @@ public final class TickerStore: ObservableObject {
         Self.bootstrapSymbol
     }
 
+    public var refreshIntervalDescription: String {
+        let components = refreshInterval.components
+
+        if components.attoseconds == 0 {
+            let seconds = components.seconds
+            return seconds == 1 ? "1 second" : "\(seconds) seconds"
+        }
+
+        let totalSeconds = Double(components.seconds) + (Double(components.attoseconds) / 1_000_000_000_000_000_000)
+        let value = totalSeconds.formatted(.number.precision(.fractionLength(0 ... 1)))
+        let usesSingular = abs(totalSeconds - 1) < 0.000_000_1
+        return usesSingular ? "\(value) second" : "\(value) seconds"
+    }
+
     public func start() {
         guard !hasStarted else {
             return
@@ -42,12 +56,16 @@ public final class TickerStore: ObservableObject {
             await refresh()
         }
 
-        autoRefreshTask = Task { [weak self] in
-            while let self,
-                  !Task.isCancelled {
+        let refreshInterval = self.refreshInterval
+        autoRefreshTask = Task { [weak self, refreshInterval] in
+            while !Task.isCancelled {
                 try? await Task.sleep(for: refreshInterval)
 
                 if Task.isCancelled {
+                    return
+                }
+
+                guard let self else {
                     return
                 }
 

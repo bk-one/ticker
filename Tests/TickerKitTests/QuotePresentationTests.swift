@@ -32,7 +32,9 @@ struct QuotePresentationTests {
 
         #expect(quote.tone?.basis == .lastClose)
         #expect(quote.tone?.direction == .up)
-        #expect(quote.tone?.percentChange == 5.1020408163265305)
+        let percentChange = quote.tone?.percentChange
+        #expect(percentChange != nil)
+        #expect(abs((percentChange ?? 0) - 5.1020408163265305) < 1e-9)
     }
 
     @Test

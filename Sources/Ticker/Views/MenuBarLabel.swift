@@ -43,15 +43,15 @@ struct MenuBarLabel: View {
         )
         attributedString.append(NSAttributedString(string: priceText, attributes: priceAttributes))
 
-        let size = attributedString.boundingRect(
+        let boundingRect = attributedString.boundingRect(
             with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
-        ).integral.size
+        ).integral
 
-        let image = NSImage(size: size)
+        let image = NSImage(size: boundingRect.size)
         image.isTemplate = false
         image.lockFocus()
-        attributedString.draw(at: .zero)
+        attributedString.draw(at: NSPoint(x: -boundingRect.origin.x, y: -boundingRect.origin.y))
         image.unlockFocus()
         return image
     }

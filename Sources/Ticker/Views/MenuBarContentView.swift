@@ -40,7 +40,7 @@ struct MenuBarContentView: View {
                 Text("Ticker")
                     .font(.system(size: 22, weight: .black, design: .rounded))
 
-                Text("Bootstrapped menu bar display for the default AAPL ticker.")
+                Text("Bootstrapped menu bar display for the default \(model.displaySymbol) ticker.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -89,7 +89,7 @@ struct MenuBarContentView: View {
                         .fill(Color.black.opacity(0.04))
                 )
         } else {
-            Label("Loading live price for AAPL", systemImage: "clock")
+            Label("Loading live price for \(model.displaySymbol)", systemImage: "clock")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(10)
@@ -165,7 +165,7 @@ struct MenuBarContentView: View {
 
     private var footer: some View {
         HStack {
-            Text("Refreshes every 15 seconds")
+            Text("Refreshes every \(model.refreshIntervalDescription)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 

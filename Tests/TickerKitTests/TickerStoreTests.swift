@@ -27,6 +27,7 @@ struct TickerStoreTests {
         await store.refresh()
 
         #expect(store.displaySymbol == "AAPL")
+        #expect(store.refreshIntervalDescription == "60 seconds")
         #expect(store.quote == quote)
         #expect(store.lastUpdated == quote.asOf)
         #expect(store.errorMessage == nil)
