@@ -32,6 +32,43 @@ public struct QuoteTone: Equatable, Sendable {
     }
 }
 
+public enum MarketSessionState: String, Equatable, Sendable {
+    case open
+    case closed
+    case unknown
+}
+
+public enum MarketSessionSource: String, Equatable, Sendable {
+    case providerMetadata
+    case continuousTradingRule
+    case unavailable
+}
+
+public struct MarketSessionInfo: Equatable, Sendable {
+    public let state: MarketSessionState
+    public let exchangeTimeZoneIdentifier: String?
+    public let source: MarketSessionSource
+
+    public static let unknown = MarketSessionInfo(
+        state: .unknown,
+        exchangeTimeZoneIdentifier: nil,
+        source: .unavailable
+    )
+
+    public var isOpen: Bool { state == .open }
+    public var isClosed: Bool { state == .closed }
+
+    public init(
+        state: MarketSessionState,
+        exchangeTimeZoneIdentifier: String?,
+        source: MarketSessionSource
+    ) {
+        self.state = state
+        self.exchangeTimeZoneIdentifier = exchangeTimeZoneIdentifier
+        self.source = source
+    }
+}
+
 public struct MarketQuote: Identifiable, Equatable, Sendable {
     public let symbol: String
     public let displayName: String
@@ -40,11 +77,14 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
     public let currencyCode: String?
     public let exchangeName: String
     public let instrumentType: String
+    public let session: MarketSessionInfo
     public let asOf: Date
     public let intradayCloses: [Double]
     public let priceHint: Int?
 
     public var id: String { symbol }
+    public var isMarketOpen: Bool { session.isOpen }
+    public var isMarketClosed: Bool { session.isClosed }
 
     public var absoluteChange: Double? {
         guard let previousClose else {
@@ -76,7 +116,8 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         instrumentType: String,
         asOf: Date,
         intradayCloses: [Double],
-        priceHint: Int?
+        priceHint: Int?,
+        session: MarketSessionInfo = .unknown
     ) {
         self.symbol = symbol
         self.displayName = displayName
@@ -85,6 +126,7 @@ public struct MarketQuote: Identifiable, Equatable, Sendable {
         self.currencyCode = currencyCode
         self.exchangeName = exchangeName
         self.instrumentType = instrumentType
+        self.session = session
         self.asOf = asOf
         self.intradayCloses = intradayCloses
         self.priceHint = priceHint

@@ -40,6 +40,10 @@ struct YahooSparkMeta: Decodable {
     let exchangeName: String?
     let instrumentType: String?
     let priceHint: Int?
+    let marketState: String?
+    let exchangeTimezoneName: String?
+    let exchangeTimezoneShortName: String?
+    let gmtOffSetMilliseconds: Int?
 }
 
 struct YahooErrorEnvelope: Decodable {

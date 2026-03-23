@@ -29,6 +29,8 @@ struct YahooFinanceClientTests {
                       "regularMarketPrice": 248.25,
                       "previousClose": 248.96,
                       "regularMarketTime": 1774031733,
+                      "marketState": "REGULAR",
+                      "exchangeTimezoneName": "America/New_York",
                       "fullExchangeName": "NasdaqGS",
                       "instrumentType": "EQUITY",
                       "priceHint": 2
@@ -54,6 +56,8 @@ struct YahooFinanceClientTests {
                       "regularMarketPrice": 4564.5,
                       "previousClose": 4994.0,
                       "regularMarketTime": 1774030902,
+                      "marketState": "POSTPOST",
+                      "exchangeTimezoneName": "America/Chicago",
                       "fullExchangeName": "COMEX",
                       "instrumentType": "FUTURE",
                       "priceHint": 2
@@ -84,5 +88,10 @@ struct YahooFinanceClientTests {
         #expect(batch.missingSymbols == ["MISSING"])
         #expect(batch.quotes.first?.displayName == "Gold Apr 26")
         #expect(batch.quotes.first?.intradayCloses.last == 4564.5)
+        #expect(batch.quotes.first?.session.state == .closed)
+        #expect(batch.quotes.first?.session.exchangeTimeZoneIdentifier == "America/Chicago")
+        #expect(batch.quotes.first?.session.source == .providerMetadata)
+        #expect(batch.quotes.last?.session.state == .open)
+        #expect(batch.quotes.last?.session.exchangeTimeZoneIdentifier == "America/New_York")
     }
 }
