@@ -9,9 +9,7 @@ struct VisualSnapshotTests {
     @Test
     @MainActor
     func rendersLightModeSnapshots() async throws {
-        let outputDirectory = URL(fileURLWithPath: "/tmp/ticker-visual-snapshots")
-        try? FileManager.default.removeItem(at: outputDirectory)
-        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let outputDirectory = try makeOutputDirectory(named: "light-mode")
 
         let store = try await configuredStore()
         let searchModel = await configuredSearchModel(store: store)
@@ -50,8 +48,7 @@ struct VisualSnapshotTests {
     @Test
     @MainActor
     func rendersDarkModeSnapshots() async throws {
-        let outputDirectory = URL(fileURLWithPath: "/tmp/ticker-visual-snapshots")
-        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let outputDirectory = try makeOutputDirectory(named: "dark-mode")
 
         let store = try await configuredStore()
         let searchModel = await configuredSearchModel(store: store)
@@ -195,7 +192,7 @@ struct VisualSnapshotTests {
 
         model.beginSession()
         model.updateQuery("gold")
-        try? await Task.sleep(for: .milliseconds(300))
+        try? await waitForSearchResults(in: model)
         return model
     }
 
@@ -236,6 +233,28 @@ struct VisualSnapshotTests {
 
         try pngData.write(to: url)
     }
+
+    private func makeOutputDirectory(named name: String) throws -> URL {
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appending(path: "ticker-visual-snapshots")
+            .appending(path: "\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        return outputDirectory
+    }
+
+    @MainActor
+    private func waitForSearchResults(in model: InstrumentSearchViewModel) async throws {
+        let clock = ContinuousClock()
+        let deadline = clock.now + .seconds(2)
+
+        while model.isSearching || model.results.isEmpty {
+            guard clock.now < deadline else {
+                throw SnapshotError.searchTimedOut
+            }
+
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
 }
 
 private struct SnapshotQuoteClient: YahooFinanceClientProtocol {
@@ -256,6 +275,7 @@ private struct SnapshotSearchClient: YahooFinanceSearchClientProtocol {
 
 private enum SnapshotError: Error {
     case encodingFailed
+    case searchTimedOut
 }
 
 private func makeDefaults() -> UserDefaults {

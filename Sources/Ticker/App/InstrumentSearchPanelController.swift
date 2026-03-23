@@ -109,7 +109,13 @@ final class InstrumentSearchPanelController: NSObject, NSWindowDelegate {
         }
 
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            self?.close()
+            guard let self,
+                  self.panel.isVisible,
+                  !NSApp.isActive else {
+                return
+            }
+
+            self.close()
         }
     }
 

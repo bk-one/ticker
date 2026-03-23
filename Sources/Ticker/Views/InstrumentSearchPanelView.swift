@@ -295,6 +295,7 @@ struct InstrumentSearchPanelView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(
