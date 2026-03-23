@@ -24,5 +24,9 @@ let package = Package(
             name: "TickerKitTests",
             dependencies: ["TickerKit"]
         ),
+        .testTarget(
+            name: "TickerAppTests",
+            dependencies: ["Ticker", "TickerKit"]
+        ),
     ]
 )

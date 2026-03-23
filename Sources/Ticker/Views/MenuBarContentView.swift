@@ -4,186 +4,185 @@ import TickerKit
 
 struct MenuBarContentView: View {
     @ObservedObject var model: TickerStore
+    let onAddInstrument: () -> Void
+
+    init(
+        model: TickerStore,
+        onAddInstrument: @escaping () -> Void = {}
+    ) {
+        self._model = ObservedObject(wrappedValue: model)
+        self.onAddInstrument = onAddInstrument
+    }
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.96, green: 0.97, blue: 0.94),
-                    Color.white,
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            VisualEffectBackdrop(material: .popover)
+            Color(nsColor: .windowBackgroundColor)
+                .opacity(0.08)
 
-            Circle()
-                .fill(Color(red: 0.96, green: 0.74, blue: 0.33).opacity(0.22))
-                .frame(width: 180, height: 180)
-                .blur(radius: 30)
-                .offset(x: 120, y: -170)
-
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 0) {
                 header
-                statusBanner
-                quoteCard
-                footer
+                actionRow(
+                    title: "Add Instrument…",
+                    trailingSystemImage: "chevron.right",
+                    action: onAddInstrument
+                )
+                sectionDivider
+                trackedSection
+                sectionDivider
+                actionRow(
+                    title: "Refresh Now",
+                    action: {
+                        Task {
+                            await model.refresh()
+                        }
+                    }
+                )
+                actionRow(
+                    title: "Quit",
+                    action: {
+                        NSApplication.shared.terminate(nil)
+                    }
+                )
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
         }
-        .frame(width: 340)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .frame(width: 356)
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Ticker")
-                    .font(.system(size: 22, weight: .black, design: .rounded))
-
-                Text("Bootstrapped menu bar display for the default \(model.displaySymbol) ticker.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+        HStack(alignment: .center, spacing: 12) {
+            Text("Options")
+                .font(.system(size: 20, weight: .medium))
 
             Spacer()
 
             if model.isLoading {
                 ProgressView()
                     .controlSize(.small)
+            } else if let lastUpdated = model.lastUpdated {
+                Text(QuoteFormatting.shortTime(lastUpdated))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
             }
-
-            Button {
-                Task {
-                    await model.refresh()
-                }
-            } label: {
-                Image(systemName: "arrow.clockwise")
-            }
-            .buttonStyle(.borderless)
-            .help("Refresh now")
         }
+        .padding(.horizontal, 4)
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder
-    private var statusBanner: some View {
-        if let message = model.errorMessage,
-           model.quote != nil {
-            Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.caption)
-                .foregroundStyle(Color(red: 0.66, green: 0.26, blue: 0.08))
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(red: 0.99, green: 0.95, blue: 0.87))
-                )
-        } else if let lastUpdated = model.lastUpdated {
-            Label("Last update \(QuoteFormatting.shortTime(lastUpdated))", systemImage: "clock")
-                .font(.caption)
+    private var trackedSection: some View {
+        if model.trackedSymbols.isEmpty {
+            Text("No tracked instruments yet.")
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.black.opacity(0.04))
-                )
+                .padding(.horizontal, 6)
+                .padding(.vertical, 12)
+        } else if model.trackedSymbols.count > 10 {
+            ScrollView {
+                trackedRows
+            }
+            .frame(maxHeight: trackedRowsHeight)
         } else {
-            Label("Loading live price for \(model.displaySymbol)", systemImage: "clock")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.black.opacity(0.04))
-                )
+            trackedRows
         }
     }
 
-    @ViewBuilder
-    private var quoteCard: some View {
-        if let quote = model.quote {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(model.displaySymbol)
-                    .font(.custom("HelveticaNeue-CondensedBold", size: 20))
-
-                Text(quote.displayName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Text(QuoteFormatting.price(quote))
-                    .font(.system(size: 30, weight: .semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(QuoteFormatting.color(for: quote))
-
-                if let toneSummary = QuoteFormatting.toneSummary(quote) {
-                    Text(toneSummary)
-                        .font(.subheadline.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(QuoteFormatting.color(for: quote))
-                }
-
-                Text(colorBasisLine(for: quote))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Text(quote.exchangeName)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+    private var trackedRows: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(model.trackedSymbols, id: \.self) { symbol in
+                trackedRow(for: symbol)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.black.opacity(0.04))
-            )
-        } else {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(QuoteFormatting.loadingPlaceholder(for: model.displaySymbol))
-                    .font(.custom("HelveticaNeue-CondensedBold", size: 28))
-                    .monospacedDigit()
+        }
+    }
 
-                Text("Loading the first live quote. The menu bar stays populated instead of showing a blank state.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+    private func actionRow(
+        title: String,
+        trailingSystemImage: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.primary)
 
-                if let message = model.errorMessage {
-                    Text(message)
-                        .font(.caption)
-                        .foregroundStyle(Color(red: 0.66, green: 0.26, blue: 0.08))
+                Spacer()
+
+                if let trailingSystemImage {
+                    Image(systemName: trailingSystemImage)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.black.opacity(0.04))
-            )
+            .padding(.horizontal, 6)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 
-    private var footer: some View {
-        HStack {
-            Text("Refreshes every \(model.refreshIntervalDescription)")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+    private func trackedRow(for symbol: String) -> some View {
+        let quote = model.quote(for: symbol)
 
-            Spacer()
+        return Button {
+            _ = model.removeInstrument(symbol: symbol)
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12)
 
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
+                Text(symbol)
+                    .font(.custom("HelveticaNeue-CondensedBold", size: 14))
+                    .foregroundStyle(.primary)
+
+                Text(quote?.displayName ?? symbol)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary.opacity(0.82))
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
+                Text(priceText(for: quote))
+                    .font(.custom("HelveticaNeue-CondensedBold", size: 14))
+                    .monospacedDigit()
+                    .foregroundStyle(Color(nsColor: QuoteFormatting.nsColor(for: quote)))
             }
-            .buttonStyle(.borderless)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .help("Remove \(symbol)")
     }
 
-    private func colorBasisLine(for quote: MarketQuote) -> String {
-        switch quote.tone?.basis {
-        case .lastClose:
-            return "Color intensity is based on the last close."
-        case nil:
-            return "Color stays neutral until last-close comparison data is available."
+    private var trackedRowsHeight: CGFloat {
+        let visibleRows = min(model.trackedSymbols.count, 10)
+        guard visibleRows > 0 else {
+            return 0
         }
+
+        return CGFloat(visibleRows) * 31
+    }
+
+    private var sectionDivider: some View {
+        Divider()
+            .padding(.vertical, 6)
+    }
+
+    private func priceText(for quote: MarketQuote?) -> String {
+        guard let quote else {
+            return "--"
+        }
+
+        return QuoteFormatting.price(quote)
     }
 }
