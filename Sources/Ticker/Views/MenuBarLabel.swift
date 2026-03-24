@@ -4,7 +4,7 @@ import TickerKit
 @MainActor
 enum MenuBarLabelRenderer {
     static func image(for model: TickerStore) -> NSImage {
-        let attributedString = attributedTitle(for: model)
+        let attributedString = renderedTitle(for: model)
 
         let boundingRect = attributedString.boundingRect(
             with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
@@ -19,6 +19,10 @@ enum MenuBarLabelRenderer {
         return image
     }
 
+    static func attributedTitle(for model: TickerStore) -> NSAttributedString {
+        renderedTitle(for: model)
+    }
+
     static func accessibilityLabel(for model: TickerStore) -> String {
         guard model.hasTrackedSymbols else {
             return TickerStore.emptyStateLabel
@@ -26,19 +30,19 @@ enum MenuBarLabelRenderer {
 
         return model.trackedSymbols
             .map { symbol in
-                "\(symbol) \(priceText(for: model.quote(for: symbol)))"
+                accessibilityLabel(for: symbol, quote: model.quote(for: symbol))
             }
             .joined(separator: ", ")
     }
 
-    private static func attributedTitle(for model: TickerStore) -> NSMutableAttributedString {
+    private static func renderedTitle(for model: TickerStore) -> NSMutableAttributedString {
         let attributedString = NSMutableAttributedString()
 
         guard model.hasTrackedSymbols else {
             attributedString.append(
                 NSAttributedString(
                     string: TickerStore.emptyStateLabel,
-                    attributes: symbolAttributes
+                    attributes: symbolAttributes()
                 )
             )
             return attributedString
@@ -55,17 +59,18 @@ enum MenuBarLabelRenderer {
             }
 
             let quote = model.quote(for: symbol)
+            let visualStyle = QuoteFormatting.visualStyle(for: quote)
 
             attributedString.append(
                 NSAttributedString(
                     string: "\(symbol) ",
-                    attributes: symbolAttributes
+                    attributes: symbolAttributes(color: visualStyle.symbolColor)
                 )
             )
             attributedString.append(
                 NSAttributedString(
                     string: priceText(for: quote),
-                    attributes: priceAttributes(color: QuoteFormatting.nsColor(for: quote))
+                    attributes: priceAttributes(color: visualStyle.priceTextColor)
                 )
             )
         }
@@ -81,10 +86,20 @@ enum MenuBarLabelRenderer {
         return QuoteFormatting.price(quote)
     }
 
-    private static var symbolAttributes: [NSAttributedString.Key: Any] {
+    private static func accessibilityLabel(for symbol: String, quote: MarketQuote?) -> String {
+        let baseLabel = "\(symbol) \(priceText(for: quote))"
+
+        if let stateSummary = QuoteFormatting.stateSummary(for: quote) {
+            return "\(baseLabel), \(stateSummary.lowercased())"
+        }
+
+        return baseLabel
+    }
+
+    private static func symbolAttributes(color: NSColor = .labelColor) -> [NSAttributedString.Key: Any] {
         [
             .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
-            .foregroundColor: NSColor.labelColor,
+            .foregroundColor: color,
         ]
     }
 

@@ -82,7 +82,7 @@ struct VisualSnapshotTests {
     private func configuredStore() async throws -> TickerStore {
         let defaults = makeDefaults()
         let trackedSymbolsKey = UUID().uuidString
-        defaults.set(["AAPL", "GC=F"], forKey: trackedSymbolsKey)
+        defaults.set(["AAPL", "GC=F", "BTC-USD"], forKey: trackedSymbolsKey)
 
         let batch = MarketBatch(
             quotes: [
@@ -96,7 +96,12 @@ struct VisualSnapshotTests {
                     instrumentType: "EQUITY",
                     asOf: Date(timeIntervalSince1970: 1_774_031_733),
                     intradayCloses: [246.8, 247.2, 247.7, 248.02],
-                    priceHint: 2
+                    priceHint: 2,
+                    session: MarketSessionInfo(
+                        state: .closed,
+                        exchangeTimeZoneIdentifier: "America/New_York",
+                        source: .providerMetadata
+                    )
                 ),
                 MarketQuote(
                     symbol: "GC=F",
@@ -108,7 +113,29 @@ struct VisualSnapshotTests {
                     instrumentType: "FUTURE",
                     asOf: Date(timeIntervalSince1970: 1_774_031_733),
                     intradayCloses: [4548.0, 4556.7, 4564.5],
-                    priceHint: 2
+                    priceHint: 2,
+                    session: MarketSessionInfo(
+                        state: .closed,
+                        exchangeTimeZoneIdentifier: "America/Chicago",
+                        source: .providerMetadata
+                    )
+                ),
+                MarketQuote(
+                    symbol: "BTC-USD",
+                    displayName: "Bitcoin USD",
+                    currentPrice: 86970,
+                    previousClose: 86250,
+                    currencyCode: "USD",
+                    exchangeName: "CCC",
+                    instrumentType: "CRYPTOCURRENCY",
+                    asOf: Date(timeIntervalSince1970: 1_774_031_733),
+                    intradayCloses: [86010, 86540, 86970],
+                    priceHint: 2,
+                    session: MarketSessionInfo(
+                        state: .open,
+                        exchangeTimeZoneIdentifier: nil,
+                        source: .continuousTradingRule
+                    )
                 ),
             ],
             missingSymbols: []

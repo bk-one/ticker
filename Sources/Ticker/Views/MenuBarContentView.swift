@@ -130,6 +130,7 @@ struct MenuBarContentView: View {
 
     private func trackedRow(for symbol: String) -> some View {
         let quote = model.quote(for: symbol)
+        let visualStyle = QuoteFormatting.visualStyle(for: quote)
 
         return Button {
             _ = model.removeInstrument(symbol: symbol)
@@ -142,7 +143,7 @@ struct MenuBarContentView: View {
 
                 Text(symbol)
                     .font(.custom("HelveticaNeue-CondensedBold", size: 14))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color(nsColor: visualStyle.symbolColor))
 
                 Text(quote?.displayName ?? symbol)
                     .font(.system(size: 13, weight: .medium))
@@ -151,10 +152,7 @@ struct MenuBarContentView: View {
 
                 Spacer(minLength: 8)
 
-                Text(priceText(for: quote))
-                    .font(.custom("HelveticaNeue-CondensedBold", size: 14))
-                    .monospacedDigit()
-                    .foregroundStyle(Color(nsColor: QuoteFormatting.nsColor(for: quote)))
+                priceView(for: quote, style: visualStyle)
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 7)
@@ -184,5 +182,31 @@ struct MenuBarContentView: View {
         }
 
         return QuoteFormatting.price(quote)
+    }
+
+    @ViewBuilder
+    private func priceView(
+        for quote: MarketQuote?,
+        style: QuoteVisualStyle
+    ) -> some View {
+        let price = priceText(for: quote)
+
+        if let backgroundColor = style.priceBackgroundColor {
+            Text(price)
+                .font(.custom("HelveticaNeue-CondensedBold", size: 14))
+                .monospacedDigit()
+                .foregroundStyle(Color(nsColor: style.priceTextColor))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color(nsColor: backgroundColor))
+                )
+        } else {
+            Text(price)
+                .font(.custom("HelveticaNeue-CondensedBold", size: 14))
+                .monospacedDigit()
+                .foregroundStyle(Color(nsColor: style.priceTextColor))
+        }
     }
 }

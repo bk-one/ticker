@@ -34,9 +34,21 @@ public enum YahooFinanceError: LocalizedError, Equatable {
 
 public struct YahooFinanceClient: YahooFinanceClientProtocol, Sendable {
     private let session: URLSession
+    private let marketSessionResolver: any MarketSessionResolving
 
     public init(session: URLSession = .shared) {
+        self.init(
+            session: session,
+            marketSessionResolver: YahooMarketSessionResolver()
+        )
+    }
+
+    init(
+        session: URLSession = .shared,
+        marketSessionResolver: any MarketSessionResolving
+    ) {
         self.session = session
+        self.marketSessionResolver = marketSessionResolver
     }
 
     public func fetchQuotes(for symbols: [String]) async throws -> MarketBatch {
@@ -145,6 +157,12 @@ public struct YahooFinanceClient: YahooFinanceClientProtocol, Sendable {
             return nil
         }
 
+        let instrumentType = payload.meta.instrumentType ?? "UNKNOWN"
+        let marketSession = marketSessionResolver.resolve(
+            instrumentType: instrumentType,
+            meta: payload.meta
+        )
+
         return MarketQuote(
             symbol: symbol,
             displayName: payload.meta.shortName ?? payload.meta.longName ?? symbol,
@@ -152,10 +170,11 @@ public struct YahooFinanceClient: YahooFinanceClientProtocol, Sendable {
             previousClose: payload.meta.previousClose ?? payload.meta.chartPreviousClose,
             currencyCode: payload.meta.currency,
             exchangeName: payload.meta.fullExchangeName ?? payload.meta.exchangeName ?? "Yahoo Finance",
-            instrumentType: payload.meta.instrumentType ?? "UNKNOWN",
+            instrumentType: instrumentType,
             asOf: payload.meta.regularMarketTime.map(Date.init(timeIntervalSince1970:)) ?? Date(),
             intradayCloses: intradayCloses,
-            priceHint: payload.meta.priceHint
+            priceHint: payload.meta.priceHint,
+            session: marketSession
         )
     }
 
