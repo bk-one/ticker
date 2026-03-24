@@ -94,4 +94,68 @@ struct YahooFinanceClientTests {
         #expect(batch.quotes.last?.session.state == .open)
         #expect(batch.quotes.last?.session.exchangeTimeZoneIdentifier == "America/New_York")
     }
+
+    @Test
+    func usesInjectedMarketSessionResolver() throws {
+        let payload = """
+        {
+          "spark": {
+            "result": [
+              {
+                "symbol": "AAPL",
+                "response": [
+                  {
+                    "meta": {
+                      "symbol": "AAPL",
+                      "shortName": "Apple Inc.",
+                      "currency": "USD",
+                      "regularMarketPrice": 248.25,
+                      "previousClose": 248.96,
+                      "regularMarketTime": 1774031733,
+                      "marketState": "REGULAR",
+                      "exchangeTimezoneName": "America/New_York",
+                      "fullExchangeName": "NasdaqGS",
+                      "instrumentType": "EQUITY",
+                      "priceHint": 2
+                    },
+                    "indicators": {
+                      "quote": [
+                        {
+                          "close": [247.14, 247.68, 248.25]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "error": null
+          }
+        }
+        """
+
+        let expectedSession = MarketSessionInfo(
+            state: .closed,
+            exchangeTimeZoneIdentifier: "Injected/Session",
+            source: .continuousTradingRule
+        )
+        let client = YahooFinanceClient(
+            marketSessionResolver: StubMarketSessionResolver(session: expectedSession)
+        )
+
+        let batch = try client.decodeMarketBatch(
+            from: Data(payload.utf8),
+            requestedSymbols: ["AAPL"]
+        )
+
+        #expect(batch.quotes.first?.session == expectedSession)
+    }
+}
+
+private struct StubMarketSessionResolver: MarketSessionResolving {
+    let session: MarketSessionInfo
+
+    func resolve(instrumentType: String, meta: YahooSparkMeta) -> MarketSessionInfo {
+        session
+    }
 }

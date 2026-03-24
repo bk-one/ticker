@@ -4,7 +4,7 @@ import TickerKit
 @MainActor
 enum MenuBarLabelRenderer {
     static func image(for model: TickerStore) -> NSImage {
-        let attributedString = attributedTitle(for: model)
+        let attributedString = renderedTitle(for: model)
 
         let boundingRect = attributedString.boundingRect(
             with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
@@ -19,6 +19,10 @@ enum MenuBarLabelRenderer {
         return image
     }
 
+    static func attributedTitle(for model: TickerStore) -> NSAttributedString {
+        renderedTitle(for: model)
+    }
+
     static func accessibilityLabel(for model: TickerStore) -> String {
         guard model.hasTrackedSymbols else {
             return TickerStore.emptyStateLabel
@@ -31,7 +35,7 @@ enum MenuBarLabelRenderer {
             .joined(separator: ", ")
     }
 
-    private static func attributedTitle(for model: TickerStore) -> NSMutableAttributedString {
+    private static func renderedTitle(for model: TickerStore) -> NSMutableAttributedString {
         let attributedString = NSMutableAttributedString()
 
         guard model.hasTrackedSymbols else {

@@ -44,7 +44,7 @@ final class StatusBarController: NSObject {
         button.target = self
         button.action = #selector(handleStatusItemClick(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        button.imagePosition = .imageOnly
+        button.imagePosition = .noImage
         button.imageScaling = .scaleNone
     }
 
@@ -85,7 +85,8 @@ final class StatusBarController: NSObject {
             return
         }
 
-        button.image = MenuBarLabelRenderer.image(for: store)
+        button.image = nil
+        button.attributedTitle = MenuBarLabelRenderer.attributedTitle(for: store)
         button.setAccessibilityTitle(MenuBarLabelRenderer.accessibilityLabel(for: store))
     }
 

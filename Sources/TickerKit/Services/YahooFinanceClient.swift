@@ -34,11 +34,21 @@ public enum YahooFinanceError: LocalizedError, Equatable {
 
 public struct YahooFinanceClient: YahooFinanceClientProtocol, Sendable {
     private let session: URLSession
-    private let marketSessionResolver: YahooMarketSessionResolver
+    private let marketSessionResolver: any MarketSessionResolving
 
     public init(session: URLSession = .shared) {
+        self.init(
+            session: session,
+            marketSessionResolver: YahooMarketSessionResolver()
+        )
+    }
+
+    init(
+        session: URLSession = .shared,
+        marketSessionResolver: any MarketSessionResolving
+    ) {
         self.session = session
-        self.marketSessionResolver = YahooMarketSessionResolver()
+        self.marketSessionResolver = marketSessionResolver
     }
 
     public func fetchQuotes(for symbols: [String]) async throws -> MarketBatch {

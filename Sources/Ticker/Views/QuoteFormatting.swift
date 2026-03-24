@@ -138,13 +138,13 @@ enum QuoteFormatting {
         case .neutral:
             return .labelColor
         case .up:
-            return mixedNSColor(
+            return dynamicMixedNSColor(
                 from: .labelColor,
                 to: .systemGreen,
                 factor: 0.35 + (tone.intensity * 0.65)
             )
         case .down:
-            return mixedNSColor(
+            return dynamicMixedNSColor(
                 from: .labelColor,
                 to: .systemRed,
                 factor: 0.35 + (tone.intensity * 0.65)
@@ -152,7 +152,7 @@ enum QuoteFormatting {
         }
     }
 
-    private static var closedMarketNSColor: NSColor {
+    private static let closedMarketNSColor: NSColor = {
         NSColor(name: nil) { appearance in
             switch appearance.bestMatch(from: [.darkAqua, .vibrantDark]) {
             case .darkAqua, .vibrantDark:
@@ -171,15 +171,41 @@ enum QuoteFormatting {
                 )
             }
         }
-    }
+    }()
 
     private static func contrastingTextColor(for color: NSColor) -> NSColor {
+        NSColor(name: nil) { appearance in
+            contrastingTextColor(
+                forResolvedColor: colorResolvedForCurrentAppearance(color, appearance: appearance)
+            )
+        }
+    }
+
+    private static func contrastingTextColor(forResolvedColor color: NSColor) -> NSColor {
         let converted = color.usingColorSpace(.sRGB) ?? color
         let luminance = (0.299 * converted.redComponent)
             + (0.587 * converted.greenComponent)
             + (0.114 * converted.blueComponent)
 
         return luminance > 0.6 ? .black : .white
+    }
+
+    private static func dynamicMixedNSColor(from: NSColor, to: NSColor, factor: Double) -> NSColor {
+        NSColor(name: nil) { appearance in
+            mixedNSColor(
+                from: colorResolvedForCurrentAppearance(from, appearance: appearance),
+                to: colorResolvedForCurrentAppearance(to, appearance: appearance),
+                factor: factor
+            )
+        }
+    }
+
+    private static func colorResolvedForCurrentAppearance(_ color: NSColor, appearance: NSAppearance) -> NSColor {
+        var resolvedColor = color
+        appearance.performAsCurrentDrawingAppearance {
+            resolvedColor = color.usingColorSpace(.sRGB) ?? color
+        }
+        return resolvedColor
     }
 
     private static func mixedNSColor(from: NSColor, to: NSColor, factor: Double) -> NSColor {
