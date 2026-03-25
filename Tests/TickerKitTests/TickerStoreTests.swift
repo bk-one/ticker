@@ -276,6 +276,90 @@ struct TickerStoreTests {
         #expect(defaults.stringArray(forKey: trackedSymbolsKey) == [])
         #expect(defaults.string(forKey: displaySymbolKey) == nil)
     }
+
+    @Test
+    @MainActor
+    func saveAlertBoundaryPersistsAcrossStoreReloads() async {
+        let defaults = makeDefaults()
+        let trackedSymbolsKey = UUID().uuidString
+        let displaySymbolKey = UUID().uuidString
+        let alertBoundariesKey = UUID().uuidString
+        let quote = MarketQuote(
+            symbol: "AAPL",
+            displayName: "Apple Inc.",
+            currentPrice: 248.02,
+            previousClose: 247.10,
+            currencyCode: "USD",
+            exchangeName: "NasdaqGS",
+            instrumentType: "EQUITY",
+            asOf: Date(timeIntervalSince1970: 1_774_031_733),
+            intradayCloses: [246.8, 247.2, 247.7, 248.02],
+            priceHint: 2
+        )
+
+        let store = TickerStore(
+            client: StubYahooFinanceClient(result: .success(MarketBatch(quotes: [quote], missingSymbols: []))),
+            refreshInterval: .seconds(60),
+            defaults: defaults,
+            trackedSymbolsKey: trackedSymbolsKey,
+            displaySymbolKey: displaySymbolKey,
+            alertBoundariesKey: alertBoundariesKey
+        )
+        await store.refresh()
+
+        let savedBoundary = store.saveAlertBoundary(symbol: "AAPL", upper: 247.5, lower: nil)
+
+        #expect(savedBoundary == PriceAlertBoundary(upper: 247.5, lower: nil))
+        #expect(store.alertBoundary(for: "AAPL") == PriceAlertBoundary(upper: 247.5, lower: nil))
+        #expect(store.isAlertTriggered(for: "AAPL"))
+
+        let reloadedStore = TickerStore(
+            client: StubYahooFinanceClient(result: .success(MarketBatch(quotes: [], missingSymbols: []))),
+            refreshInterval: .seconds(60),
+            defaults: defaults,
+            trackedSymbolsKey: trackedSymbolsKey,
+            displaySymbolKey: displaySymbolKey,
+            alertBoundariesKey: alertBoundariesKey
+        )
+
+        #expect(reloadedStore.alertBoundary(for: "AAPL") == PriceAlertBoundary(upper: 247.5, lower: nil))
+    }
+
+    @Test
+    @MainActor
+    func removeInstrumentClearsAssociatedAlertBoundary() async {
+        let defaults = makeDefaults()
+        let trackedSymbolsKey = UUID().uuidString
+        let displaySymbolKey = UUID().uuidString
+        let alertBoundariesKey = UUID().uuidString
+        defaults.set(["AAPL", "GC=F"], forKey: trackedSymbolsKey)
+
+        let store = TickerStore(
+            client: StubYahooFinanceClient(result: .success(MarketBatch(quotes: [], missingSymbols: []))),
+            refreshInterval: .seconds(60),
+            defaults: defaults,
+            trackedSymbolsKey: trackedSymbolsKey,
+            displaySymbolKey: displaySymbolKey,
+            alertBoundariesKey: alertBoundariesKey
+        )
+
+        _ = store.saveAlertBoundary(symbol: "GC=F", upper: 4500, lower: nil)
+        let removed = store.removeInstrument(symbol: "GC=F")
+
+        #expect(removed)
+        #expect(store.alertBoundary(for: "GC=F") == nil)
+
+        let reloadedStore = TickerStore(
+            client: StubYahooFinanceClient(result: .success(MarketBatch(quotes: [], missingSymbols: []))),
+            refreshInterval: .seconds(60),
+            defaults: defaults,
+            trackedSymbolsKey: trackedSymbolsKey,
+            displaySymbolKey: displaySymbolKey,
+            alertBoundariesKey: alertBoundariesKey
+        )
+
+        #expect(reloadedStore.alertBoundary(for: "GC=F") == nil)
+    }
 }
 
 private struct StubYahooFinanceClient: YahooFinanceClientProtocol {

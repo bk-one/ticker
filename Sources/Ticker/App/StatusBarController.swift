@@ -44,13 +44,13 @@ final class StatusBarController: NSObject {
         button.target = self
         button.action = #selector(handleStatusItemClick(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        button.imagePosition = .noImage
+        button.imagePosition = .imageOnly
         button.imageScaling = .scaleNone
     }
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 356, height: 320)
+        popover.contentSize = NSSize(width: 356, height: 440)
         popover.contentViewController = NSHostingController(
             rootView: MenuBarContentView(
                 model: store,
@@ -85,8 +85,9 @@ final class StatusBarController: NSObject {
             return
         }
 
-        button.image = nil
-        button.attributedTitle = MenuBarLabelRenderer.attributedTitle(for: store)
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
+        button.image = MenuBarLabelRenderer.image(for: store)
         button.setAccessibilityTitle(MenuBarLabelRenderer.accessibilityLabel(for: store))
     }
 
@@ -134,7 +135,7 @@ final class StatusBarController: NSObject {
         let fittingSize = contentView.fittingSize
         popover.contentSize = NSSize(
             width: max(320, fittingSize.width),
-            height: max(1, fittingSize.height)
+            height: max(440, fittingSize.height)
         )
     }
 }
