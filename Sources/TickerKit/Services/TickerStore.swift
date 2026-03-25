@@ -6,6 +6,7 @@ public final class TickerStore: ObservableObject {
     public static let bootstrapSymbol = "AAPL"
     public static let trackedSymbolsDefaultsKey = "tracked_symbols"
     public static let displaySymbolDefaultsKey = "display_symbol"
+    public static let alertBoundariesDefaultsKey = "alert_boundaries"
     public static let emptyStateLabel = "Click to add ticker"
 
     @Published public private(set) var trackedSymbols: [String]
@@ -14,11 +15,13 @@ public final class TickerStore: ObservableObject {
     @Published public private(set) var isLoading = false
     @Published public private(set) var lastUpdated: Date?
     @Published public private(set) var errorMessage: String?
+    @Published public private(set) var alertBoundariesBySymbol: [String: PriceAlertBoundary]
 
     private let client: YahooFinanceClientProtocol
     private let defaults: UserDefaults
     private let trackedSymbolsKey: String
     private let displaySymbolKey: String
+    private let alertBoundariesKey: String
     private let refreshInterval: Duration
     private var autoRefreshTask: Task<Void, Never>?
     private var hasStarted = false
@@ -30,33 +33,44 @@ public final class TickerStore: ObservableObject {
         refreshInterval: Duration = .seconds(15),
         defaults: UserDefaults = .standard,
         trackedSymbolsKey: String = TickerStore.trackedSymbolsDefaultsKey,
-        displaySymbolKey: String = TickerStore.displaySymbolDefaultsKey
+        displaySymbolKey: String = TickerStore.displaySymbolDefaultsKey,
+        alertBoundariesKey: String = TickerStore.alertBoundariesDefaultsKey
     ) {
         self.defaults = defaults
         self.trackedSymbolsKey = trackedSymbolsKey
         self.displaySymbolKey = displaySymbolKey
+        self.alertBoundariesKey = alertBoundariesKey
         self.client = client
         self.refreshInterval = refreshInterval
 
         let persistedSymbols = defaults.stringArray(forKey: trackedSymbolsKey) ?? []
         let normalizedSymbols = YahooFinanceClient.normalizedSymbols(from: persistedSymbols)
 
+        let initialTrackedSymbols: [String]
         if defaults.object(forKey: trackedSymbolsKey) == nil {
-            self.trackedSymbols = [Self.bootstrapSymbol]
+            initialTrackedSymbols = [Self.bootstrapSymbol]
         } else {
-            self.trackedSymbols = normalizedSymbols
+            initialTrackedSymbols = normalizedSymbols
         }
+        self.trackedSymbols = initialTrackedSymbols
 
         let persistedDisplaySymbol = YahooFinanceClient.normalizedSymbols(
             from: defaults.string(forKey: displaySymbolKey).map { [$0] } ?? []
         ).first
 
         if let persistedDisplaySymbol,
-           self.trackedSymbols.contains(persistedDisplaySymbol) {
+           initialTrackedSymbols.contains(persistedDisplaySymbol) {
             self.selectedDisplaySymbol = persistedDisplaySymbol
         } else {
-            self.selectedDisplaySymbol = self.trackedSymbols.first
+            self.selectedDisplaySymbol = initialTrackedSymbols.first
         }
+
+        self.alertBoundariesBySymbol = Self.filteredAlertBoundaries(
+            Self.loadAlertBoundaries(from: defaults.data(forKey: alertBoundariesKey)),
+            trackedSymbols: initialTrackedSymbols
+        )
+
+        persistAlertBoundaries()
     }
 
     deinit {
@@ -93,6 +107,60 @@ public final class TickerStore: ObservableObject {
     public func isTracked(symbol: String) -> Bool {
         let normalizedSymbol = YahooFinanceClient.normalizedSymbols(from: [symbol]).first ?? symbol
         return trackedSymbols.contains(normalizedSymbol)
+    }
+
+    public func alertBoundary(for symbol: String) -> PriceAlertBoundary? {
+        guard let normalizedSymbol = Self.normalizedSymbol(from: symbol) else {
+            return nil
+        }
+
+        return alertBoundariesBySymbol[normalizedSymbol]
+    }
+
+    public func hasAlertBoundary(for symbol: String) -> Bool {
+        alertBoundary(for: symbol) != nil
+    }
+
+    public func isAlertTriggered(for symbol: String) -> Bool {
+        guard let normalizedSymbol = Self.normalizedSymbol(from: symbol),
+              let boundary = alertBoundariesBySymbol[normalizedSymbol],
+              let quote = trackedQuotesBySymbol[normalizedSymbol] else {
+            return false
+        }
+
+        return boundary.isTriggered(by: quote.currentPrice)
+    }
+
+    @discardableResult
+    public func saveAlertBoundary(
+        symbol: String,
+        upper: Double?,
+        lower: Double?
+    ) -> PriceAlertBoundary? {
+        guard let normalizedSymbol = Self.normalizedSymbol(from: symbol),
+              trackedSymbols.contains(normalizedSymbol) else {
+            return nil
+        }
+
+        let boundary = PriceAlertBoundary(upper: upper, lower: lower)
+
+        if boundary.isConfigured {
+            alertBoundariesBySymbol[normalizedSymbol] = boundary
+        } else {
+            alertBoundariesBySymbol.removeValue(forKey: normalizedSymbol)
+        }
+
+        persistAlertBoundaries()
+        return alertBoundariesBySymbol[normalizedSymbol]
+    }
+
+    public func clearAlertBoundary(symbol: String) {
+        guard let normalizedSymbol = Self.normalizedSymbol(from: symbol),
+              alertBoundariesBySymbol.removeValue(forKey: normalizedSymbol) != nil else {
+            return
+        }
+
+        persistAlertBoundaries()
     }
 
     public func start() {
@@ -152,6 +220,7 @@ public final class TickerStore: ObservableObject {
         trackedSymbols.remove(at: index)
         trackedQuotesBySymbol.removeValue(forKey: normalizedSymbol)
         trackedQuotes.removeAll { $0.symbol == normalizedSymbol }
+        alertBoundariesBySymbol.removeValue(forKey: normalizedSymbol)
 
         if selectedDisplaySymbol == normalizedSymbol {
             selectedDisplaySymbol = trackedSymbols.first
@@ -167,6 +236,7 @@ public final class TickerStore: ObservableObject {
 
         persistTrackedSymbols()
         persistDisplaySymbol()
+        persistAlertBoundaries()
         return true
     }
 
@@ -230,6 +300,14 @@ public final class TickerStore: ObservableObject {
         defaults.set(selectedDisplaySymbol, forKey: displaySymbolKey)
     }
 
+    private func persistAlertBoundaries() {
+        guard let data = try? JSONEncoder().encode(alertBoundariesBySymbol) else {
+            return
+        }
+
+        defaults.set(data, forKey: alertBoundariesKey)
+    }
+
     private func syncDisplaySymbol() {
         if let selectedDisplaySymbol,
            trackedSymbols.contains(selectedDisplaySymbol) {
@@ -238,5 +316,38 @@ public final class TickerStore: ObservableObject {
 
         selectedDisplaySymbol = trackedSymbols.first
         persistDisplaySymbol()
+    }
+
+    private static func normalizedSymbol(from symbol: String) -> String? {
+        YahooFinanceClient.normalizedSymbols(from: [symbol]).first
+    }
+
+    private static func loadAlertBoundaries(from data: Data?) -> [String: PriceAlertBoundary] {
+        guard let data,
+              let decoded = try? JSONDecoder().decode([String: PriceAlertBoundary].self, from: data) else {
+            return [:]
+        }
+
+        return decoded.reduce(into: [:]) { partialResult, entry in
+            guard let normalizedSymbol = normalizedSymbol(from: entry.key),
+                  entry.value.isConfigured else {
+                return
+            }
+
+            partialResult[normalizedSymbol] = entry.value
+        }
+    }
+
+    private static func filteredAlertBoundaries(
+        _ boundaries: [String: PriceAlertBoundary],
+        trackedSymbols: [String]
+    ) -> [String: PriceAlertBoundary] {
+        boundaries.reduce(into: [:]) { partialResult, entry in
+            guard trackedSymbols.contains(entry.key) else {
+                return
+            }
+
+            partialResult[entry.key] = entry.value
+        }
     }
 }

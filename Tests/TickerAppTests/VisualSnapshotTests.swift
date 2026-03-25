@@ -148,6 +148,8 @@ struct VisualSnapshotTests {
             trackedSymbolsKey: trackedSymbolsKey
         )
         await store.refresh()
+        _ = store.saveAlertBoundary(symbol: "GC=F", upper: 4500, lower: nil)
+        _ = store.saveAlertBoundary(symbol: "BTC-USD", upper: nil, lower: 90000)
         return store
     }
 
