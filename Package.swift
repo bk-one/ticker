@@ -14,7 +14,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "TickerKit"
+            name: "TickerKit",
+            resources: [
+                .process("Resources"),
+            ]
         ),
         .executableTarget(
             name: "Ticker",

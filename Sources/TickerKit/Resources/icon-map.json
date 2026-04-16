@@ -1,0 +1,86 @@
+[
+  {
+    "symbols": ["AAPL"],
+    "icon": { "type": "sfSymbol", "value": "apple.logo" }
+  },
+  {
+    "symbols": ["GOOG", "GOOGL"],
+    "icon": { "type": "sfSymbol", "value": "g.circle.fill" }
+  },
+  {
+    "symbols": ["AMZN"],
+    "icon": { "type": "sfSymbol", "value": "cart.fill" }
+  },
+  {
+    "symbols": ["MSFT"],
+    "icon": { "type": "sfSymbol", "value": "square.grid.2x2.fill" }
+  },
+  {
+    "symbols": ["META"],
+    "icon": { "type": "sfSymbol", "value": "infinity.circle.fill" }
+  },
+  {
+    "symbols": ["TSLA"],
+    "icon": { "type": "sfSymbol", "value": "bolt.fill" }
+  },
+  {
+    "symbols": ["NFLX"],
+    "icon": { "type": "sfSymbol", "value": "play.rectangle.fill" }
+  },
+  {
+    "symbols": ["SPOT"],
+    "icon": { "type": "sfSymbol", "value": "music.note.list" }
+  },
+  {
+    "symbols": ["SHEL"],
+    "icon": { "type": "sfSymbol", "value": "fuelpump.fill" }
+  },
+  {
+    "symbols": ["NKE"],
+    "icon": { "type": "sfSymbol", "value": "figure.run" }
+  },
+  {
+    "symbols": ["SBUX"],
+    "icon": { "type": "sfSymbol", "value": "cup.and.saucer.fill" }
+  },
+  {
+    "symbols": ["AMGN"],
+    "icon": { "type": "sfSymbol", "value": "cross.case.fill" }
+  },
+  {
+    "symbols": ["BTC-USD"],
+    "icon": { "type": "sfSymbol", "value": "bitcoinsign" }
+  },
+  {
+    "symbols": ["ETH-USD"],
+    "icon": { "type": "glyph", "value": "Ξ" }
+  },
+  {
+    "symbols": ["SOL-USD"],
+    "icon": { "type": "glyph", "value": "S" }
+  },
+  {
+    "symbols": ["XRP-USD"],
+    "icon": { "type": "sfSymbol", "value": "x.circle.fill" }
+  },
+  {
+    "symbols": ["DOGE-USD"],
+    "icon": { "type": "glyph", "value": "Ð" }
+  },
+  {
+    "symbols": ["GC=F"],
+    "icon": { "type": "sfSymbol", "value": "medal.fill" }
+  },
+  {
+    "symbols": ["SI=F"],
+    "icon": { "type": "glyph", "value": "Ag" }
+  },
+  {
+    "symbols": ["CL=F"],
+    "icon": { "type": "sfSymbol", "value": "drop.fill" }
+  },
+  {
+    "symbols": ["NG=F"],
+    "icon": { "type": "sfSymbol", "value": "flame.fill" }
+  }
+]

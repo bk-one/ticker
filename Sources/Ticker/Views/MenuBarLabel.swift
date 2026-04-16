@@ -62,9 +62,10 @@ enum MenuBarLabelRenderer {
             let visualStyle = QuoteFormatting.visualStyle(for: quote)
 
             attributedString.append(
-                NSAttributedString(
-                    string: "\(symbol) ",
-                    attributes: symbolAttributes(color: visualStyle.symbolColor)
+                renderedInstrumentIdentity(
+                    for: symbol,
+                    quote: quote,
+                    color: visualStyle.symbolColor
                 )
             )
             attributedString.append(
@@ -87,7 +88,13 @@ enum MenuBarLabelRenderer {
     }
 
     private static func accessibilityLabel(for symbol: String, quote: MarketQuote?) -> String {
-        let baseLabel = "\(symbol) \(priceText(for: quote))"
+        let identity = if let displayName = quote?.displayName,
+                          displayName.caseInsensitiveCompare(symbol) != .orderedSame {
+            "\(symbol), \(displayName)"
+        } else {
+            symbol
+        }
+        let baseLabel = "\(identity), \(priceText(for: quote))"
 
         if let stateSummary = QuoteFormatting.stateSummary(for: quote) {
             return "\(baseLabel), \(stateSummary.lowercased())"
@@ -96,9 +103,60 @@ enum MenuBarLabelRenderer {
         return baseLabel
     }
 
+    private static func renderedInstrumentIdentity(
+        for symbol: String,
+        quote: MarketQuote?,
+        color: NSColor
+    ) -> NSAttributedString {
+        if let icon = InstrumentIconCatalog.icon(for: symbol),
+           let iconString = renderedIcon(icon, color: color) {
+            let attributed = NSMutableAttributedString(attributedString: iconString)
+            attributed.append(
+                NSAttributedString(
+                    string: " ",
+                    attributes: priceAttributes(color: color)
+                )
+            )
+            return attributed
+        }
+
+        return NSAttributedString(
+            string: "\(symbol) ",
+            attributes: symbolAttributes(color: color)
+        )
+    }
+
+    private static func renderedIcon(
+        _ icon: InstrumentIcon,
+        color: NSColor
+    ) -> NSAttributedString? {
+        switch icon.kind {
+        case let .glyph(glyph):
+            return NSAttributedString(
+                string: glyph,
+                attributes: glyphAttributes(color: color)
+            )
+        case let .sfSymbol(name):
+            guard let image = renderedSymbolImage(named: name, color: color) else {
+                return nil
+            }
+
+            let attachment = NSTextAttachment()
+            attachment.attachmentCell = NSTextAttachmentCell(imageCell: image)
+            return NSAttributedString(attachment: attachment)
+        }
+    }
+
     private static func symbolAttributes(color: NSColor = .labelColor) -> [NSAttributedString.Key: Any] {
         [
             .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
+            .foregroundColor: color,
+        ]
+    }
+
+    private static func glyphAttributes(color: NSColor = .labelColor) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.systemFont(ofSize: 12, weight: .bold),
             .foregroundColor: color,
         ]
     }
@@ -115,5 +173,25 @@ enum MenuBarLabelRenderer {
             .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
             .foregroundColor: color,
         ]
+    }
+
+    private static func renderedSymbolImage(
+        named name: String,
+        color: NSColor
+    ) -> NSImage? {
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
+            return nil
+        }
+
+        let configuration = NSImage.SymbolConfiguration(pointSize: 12, weight: .bold)
+        let configuredImage = image.withSymbolConfiguration(configuration) ?? image
+        let tintedImage = NSImage(size: configuredImage.size)
+        tintedImage.lockFocus()
+        configuredImage.draw(in: NSRect(origin: .zero, size: configuredImage.size))
+        color.set()
+        NSRect(origin: .zero, size: configuredImage.size).fill(using: .sourceIn)
+        tintedImage.unlockFocus()
+        tintedImage.isTemplate = false
+        return tintedImage
     }
 }
