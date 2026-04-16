@@ -3,6 +3,9 @@ import TickerKit
 
 @MainActor
 enum MenuBarLabelRenderer {
+    private static let iconPointSize: CGFloat = 10
+    private static let iconBoundingSize = NSSize(width: 11, height: 11)
+
     static func image(for model: TickerStore) -> NSImage {
         let attributedString = renderedTitle(for: model)
 
@@ -187,7 +190,7 @@ enum MenuBarLabelRenderer {
             return nil
         }
 
-        let configuration = NSImage.SymbolConfiguration(pointSize: 12, weight: .bold)
+        let configuration = NSImage.SymbolConfiguration(pointSize: iconPointSize, weight: .bold)
         let configuredImage = image.withSymbolConfiguration(configuration) ?? image
         return tintedImage(from: configuredImage, color: color)
     }
@@ -201,7 +204,7 @@ enum MenuBarLabelRenderer {
             return nil
         }
 
-        let fittedImage = resizedImage(image, to: NSSize(width: 14, height: 14))
+        let fittedImage = resizedImage(image, toFitWithin: iconBoundingSize)
         return maskedAssetImage(from: fittedImage, color: color)
     }
 
@@ -211,11 +214,25 @@ enum MenuBarLabelRenderer {
         return NSAttributedString(attachment: attachment)
     }
 
-    private static func resizedImage(_ image: NSImage, to size: NSSize) -> NSImage {
-        let resized = NSImage(size: size)
+    private static func resizedImage(_ image: NSImage, toFitWithin boundingSize: NSSize) -> NSImage {
+        let originalSize = image.size
+        guard originalSize.width > 0, originalSize.height > 0 else {
+            return image
+        }
+
+        let scale = min(
+            boundingSize.width / originalSize.width,
+            boundingSize.height / originalSize.height
+        )
+        let scaledSize = NSSize(
+            width: max(1, floor(originalSize.width * scale)),
+            height: max(1, floor(originalSize.height * scale))
+        )
+
+        let resized = NSImage(size: scaledSize)
         resized.lockFocus()
         image.draw(
-            in: NSRect(origin: .zero, size: size),
+            in: NSRect(origin: .zero, size: scaledSize),
             from: .zero,
             operation: .copy,
             fraction: 1
@@ -309,6 +326,6 @@ enum MenuBarLabelRenderer {
 private final class BaselineAlignedAttachmentCell: NSTextAttachmentCell {
     override func cellBaselineOffset() -> NSPoint {
         let baselineOffset = super.cellBaselineOffset()
-        return NSPoint(x: baselineOffset.x, y: baselineOffset.y - 2)
+        return NSPoint(x: baselineOffset.x, y: baselineOffset.y - 1)
     }
 }
