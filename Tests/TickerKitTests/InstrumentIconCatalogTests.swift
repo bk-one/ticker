@@ -5,8 +5,10 @@ struct InstrumentIconCatalogTests {
     @Test
     func returnsConfiguredIconForKnownTicker() {
         let icon = InstrumentIconCatalog.icon(for: "aapl")
+        let bitcoin = InstrumentIconCatalog.icon(for: "btc-usd")
 
         #expect(icon?.kind == .sfSymbol("apple.logo"))
+        #expect(bitcoin?.kind == .asset("bitcoin"))
     }
 
     @Test

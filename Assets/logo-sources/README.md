@@ -8,6 +8,7 @@
 - `shell.svg`
 - `nike.svg`
 - `starbucks.svg`
+- `bitcoin.svg`
 - `ethereum.svg`
 - `solana.svg`
 - `xrp.svg`
@@ -29,5 +30,5 @@ Runtime notes:
 
 Current intentional fallback set:
 
-- `AAPL` and `BTC-USD` still use SF Symbols because the built-in symbols are already strong at menu bar size.
+- `AAPL` still uses an SF Symbol because the built-in symbol is already strong at menu bar size.
 - `AMZN`, `MSFT`, and `AMGN` remain on the existing fallback path until a cleaner bundled logo source is selected.

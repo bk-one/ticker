@@ -49,7 +49,7 @@
   },
   {
     "symbols": ["BTC-USD"],
-    "icon": { "type": "sfSymbol", "value": "bitcoinsign" }
+    "icon": { "type": "asset", "value": "bitcoin" }
   },
   {
     "symbols": ["ETH-USD"],
