@@ -4,9 +4,20 @@ import TickerKit
 
 @MainActor
 enum MenuBarLabelRenderer {
-    private static let iconPointSize: CGFloat = 7.5
-    private static let iconBoundingSize = NSSize(width: 8, height: 8)
     private static var svgPathCache: [URL: [SVGBezierPath]] = [:]
+    private static let symbolFont =
+        NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12)
+    private static let priceFont =
+        NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13)
+
+    private static var iconPointSize: CGFloat {
+        ceil(priceFont.capHeight)
+    }
+
+    private static var iconBoundingSize: NSSize {
+        let sideLength = ceil(priceFont.capHeight)
+        return NSSize(width: sideLength, height: sideLength)
+    }
 
     static func image(for model: TickerStore) -> NSImage {
         let attributedString = renderedTitle(for: model)
@@ -158,7 +169,7 @@ enum MenuBarLabelRenderer {
 
     private static func symbolAttributes(color: NSColor = .labelColor) -> [NSAttributedString.Key: Any] {
         [
-            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 12) ?? .boldSystemFont(ofSize: 12),
+            .font: symbolFont,
             .foregroundColor: color,
         ]
     }
@@ -179,7 +190,7 @@ enum MenuBarLabelRenderer {
 
     private static func priceAttributes(color: NSColor) -> [NSAttributedString.Key: Any] {
         [
-            .font: NSFont(name: "HelveticaNeue-CondensedBold", size: 13) ?? .systemFont(ofSize: 13),
+            .font: priceFont,
             .foregroundColor: color,
         ]
     }
