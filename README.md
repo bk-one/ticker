@@ -6,7 +6,7 @@ macOS menu bar app prototype that bootstraps with `AAPL` and renders live Yahoo 
 
 - SwiftUI `MenuBarExtra` app built as a Swift package.
 - Menu bar label swaps selected known instruments to compact icons or glyphs, with text fallback for unmapped symbols.
-- Logo-backed entries use bundled SVG source assets that are rasterized into app resources for runtime rendering.
+- Logo-backed entries use bundled SVG assets rendered directly at runtime, avoiding raster thumbnail artifacts.
 - Condensed ticker symbol styling to save horizontal space.
 - Price formatting based on magnitude:
   - `>= 1000`: no decimals

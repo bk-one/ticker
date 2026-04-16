@@ -76,7 +76,7 @@
     "icon": { "type": "asset", "value": "silver" }
   },
   {
-    "symbols": ["CL=F"],
+    "symbols": ["CL=F", "BZ=F"],
     "icon": { "type": "asset", "value": "oil" }
   },
   {

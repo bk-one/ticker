@@ -1,10 +1,12 @@
 import AppKit
+import PocketSVG
 import TickerKit
 
 @MainActor
 enum MenuBarLabelRenderer {
-    private static let iconPointSize: CGFloat = 10
-    private static let iconBoundingSize = NSSize(width: 11, height: 11)
+    private static let iconPointSize: CGFloat = 7.5
+    private static let iconBoundingSize = NSSize(width: 8, height: 8)
+    private static var svgPathCache: [URL: [SVGBezierPath]] = [:]
 
     static func image(for model: TickerStore) -> NSImage {
         let attributedString = renderedTitle(for: model)
@@ -199,13 +201,64 @@ enum MenuBarLabelRenderer {
         named name: String,
         color: NSColor
     ) -> NSImage? {
-        guard let url = InstrumentIconCatalog.assetURL(named: name),
-              let image = NSImage(contentsOf: url) else {
+        guard let url = InstrumentIconCatalog.assetURL(named: name) else {
+            return nil
+        }
+
+        if url.pathExtension.caseInsensitiveCompare("svg") == .orderedSame {
+            return renderedSVGAsset(at: url, color: color)
+        }
+
+        guard let image = NSImage(contentsOf: url) else {
             return nil
         }
 
         let fittedImage = resizedImage(image, toFitWithin: iconBoundingSize)
         return maskedAssetImage(from: fittedImage, color: color)
+    }
+
+    private static func renderedSVGAsset(
+        at url: URL,
+        color: NSColor
+    ) -> NSImage? {
+        let paths = svgPaths(at: url)
+        guard !paths.isEmpty,
+              let tintColor = color.usingColorSpace(.sRGB) else {
+            return nil
+        }
+
+        let image = NSImage(size: iconBoundingSize)
+        image.lockFocus()
+        defer {
+            image.unlockFocus()
+            image.isTemplate = false
+        }
+
+        guard let context = NSGraphicsContext.current?.cgContext else {
+            return nil
+        }
+
+        context.setShouldAntialias(true)
+        context.interpolationQuality = .high
+        SVGDrawPaths(
+            paths,
+            context,
+            CGRect(origin: .zero, size: iconBoundingSize),
+            tintColor.cgColor,
+            nil
+        )
+
+        return image
+    }
+
+    private static func svgPaths(at url: URL) -> [SVGBezierPath] {
+        if let cachedPaths = svgPathCache[url] {
+            return cachedPaths
+        }
+
+        let paths = SVGBezierPath.pathsFromSVG(at: url)
+        svgPathCache[url] = paths
+        return paths
     }
 
     private static func attributedAttachment(for image: NSImage) -> NSAttributedString {

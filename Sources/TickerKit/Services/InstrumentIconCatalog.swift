@@ -6,10 +6,8 @@ public enum InstrumentIconCatalog {
     }
 
     public static func assetURL(named name: String) -> URL? {
-        Bundle.module.url(
-            forResource: name,
-            withExtension: "png"
-        )
+        Bundle.module.url(forResource: name, withExtension: "svg")
+            ?? Bundle.module.url(forResource: name, withExtension: "png")
     }
 
     private static let storage: [String: InstrumentIcon] = loadStorage()

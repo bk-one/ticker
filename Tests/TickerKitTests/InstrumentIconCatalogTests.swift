@@ -25,7 +25,7 @@ struct InstrumentIconCatalogTests {
 
     @Test
     func returnsBundledAssetURLForAssetBackedTicker() {
-        #expect(InstrumentIconCatalog.assetURL(named: "ethereum") != nil)
-        #expect(InstrumentIconCatalog.assetURL(named: "solana") != nil)
+        #expect(InstrumentIconCatalog.assetURL(named: "ethereum")?.pathExtension == "svg")
+        #expect(InstrumentIconCatalog.assetURL(named: "solana")?.pathExtension == "svg")
     }
 }
