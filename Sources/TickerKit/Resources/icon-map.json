@@ -1,0 +1,86 @@
+[
+  {
+    "symbols": ["AAPL"],
+    "icon": { "type": "sfSymbol", "value": "apple.logo" }
+  },
+  {
+    "symbols": ["GOOG", "GOOGL"],
+    "icon": { "type": "asset", "value": "google" }
+  },
+  {
+    "symbols": ["AMZN"],
+    "icon": { "type": "sfSymbol", "value": "cart.fill" }
+  },
+  {
+    "symbols": ["MSFT"],
+    "icon": { "type": "sfSymbol", "value": "square.grid.2x2.fill" }
+  },
+  {
+    "symbols": ["META"],
+    "icon": { "type": "asset", "value": "meta" }
+  },
+  {
+    "symbols": ["TSLA"],
+    "icon": { "type": "asset", "value": "tesla" }
+  },
+  {
+    "symbols": ["NFLX"],
+    "icon": { "type": "asset", "value": "netflix" }
+  },
+  {
+    "symbols": ["SPOT"],
+    "icon": { "type": "asset", "value": "spotify" }
+  },
+  {
+    "symbols": ["SHEL"],
+    "icon": { "type": "asset", "value": "shell" }
+  },
+  {
+    "symbols": ["NKE"],
+    "icon": { "type": "asset", "value": "nike" }
+  },
+  {
+    "symbols": ["SBUX"],
+    "icon": { "type": "asset", "value": "starbucks" }
+  },
+  {
+    "symbols": ["AMGN"],
+    "icon": { "type": "sfSymbol", "value": "cross.case.fill" }
+  },
+  {
+    "symbols": ["BTC-USD"],
+    "icon": { "type": "asset", "value": "bitcoin" }
+  },
+  {
+    "symbols": ["ETH-USD"],
+    "icon": { "type": "asset", "value": "ethereum" }
+  },
+  {
+    "symbols": ["SOL-USD"],
+    "icon": { "type": "asset", "value": "solana" }
+  },
+  {
+    "symbols": ["XRP-USD"],
+    "icon": { "type": "asset", "value": "xrp" }
+  },
+  {
+    "symbols": ["DOGE-USD"],
+    "icon": { "type": "asset", "value": "dogecoin" }
+  },
+  {
+    "symbols": ["GC=F"],
+    "icon": { "type": "asset", "value": "gold" }
+  },
+  {
+    "symbols": ["SI=F"],
+    "icon": { "type": "asset", "value": "silver" }
+  },
+  {
+    "symbols": ["CL=F", "BZ=F"],
+    "icon": { "type": "asset", "value": "oil" }
+  },
+  {
+    "symbols": ["NG=F"],
+    "icon": { "type": "asset", "value": "gas" }
+  }
+]

@@ -1,0 +1,33 @@
+import Testing
+@testable import TickerKit
+
+struct InstrumentIconCatalogTests {
+    @Test
+    func returnsConfiguredIconForKnownTicker() {
+        let icon = InstrumentIconCatalog.icon(for: "aapl")
+        let bitcoin = InstrumentIconCatalog.icon(for: "btc-usd")
+
+        #expect(icon?.kind == .sfSymbol("apple.logo"))
+        #expect(bitcoin?.kind == .asset("bitcoin"))
+    }
+
+    @Test
+    func resolvesAliasesToTheSameIcon() {
+        let goog = InstrumentIconCatalog.icon(for: "GOOG")
+        let googl = InstrumentIconCatalog.icon(for: "googl")
+
+        #expect(goog == googl)
+        #expect(goog?.kind == .asset("google"))
+    }
+
+    @Test
+    func returnsNilForUnknownTicker() {
+        #expect(InstrumentIconCatalog.icon(for: "IAU") == nil)
+    }
+
+    @Test
+    func returnsBundledAssetURLForAssetBackedTicker() {
+        #expect(InstrumentIconCatalog.assetURL(named: "ethereum")?.pathExtension == "svg")
+        #expect(InstrumentIconCatalog.assetURL(named: "solana")?.pathExtension == "svg")
+    }
+}

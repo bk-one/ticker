@@ -5,7 +5,8 @@ macOS menu bar app prototype that bootstraps with `AAPL` and renders live Yahoo 
 ## Implemented baseline
 
 - SwiftUI `MenuBarExtra` app built as a Swift package.
-- Default menu bar label format: `AAPL <price>`.
+- Menu bar label swaps selected known instruments to compact icons or glyphs, with text fallback for unmapped symbols.
+- Logo-backed entries use bundled SVG assets rendered directly at runtime, avoiding raster thumbnail artifacts.
 - Condensed ticker symbol styling to save horizontal space.
 - Price formatting based on magnitude:
   - `>= 1000`: no decimals
@@ -13,6 +14,7 @@ macOS menu bar app prototype that bootstraps with `AAPL` and renders live Yahoo 
   - `1 ... 9.99`: 3 decimals
   - `< 1`: 4 decimals
 - Price color derived from the last close.
+- Closed-market tinting and accessibility labels still apply when a mapped symbol is rendered as an icon.
 - Loading placeholder on cold launch instead of a blank menu bar item.
 - Automatic 15-second refresh.
 - Shared quote/rendering path that works for stocks, commodities, and crypto symbols internally.

@@ -12,13 +12,25 @@ let package = Package(
             targets: ["Ticker"]
         ),
     ],
+    dependencies: [
+        .package(
+            url: "https://github.com/pocketsvg/PocketSVG.git",
+            revision: "b99f8d24cdfe7848566d34f2fd5bef3e00ed709c"
+        ),
+    ],
     targets: [
         .target(
-            name: "TickerKit"
+            name: "TickerKit",
+            resources: [
+                .process("Resources"),
+            ]
         ),
         .executableTarget(
             name: "Ticker",
-            dependencies: ["TickerKit"]
+            dependencies: [
+                "TickerKit",
+                "PocketSVG",
+            ]
         ),
         .testTarget(
             name: "TickerKitTests",
