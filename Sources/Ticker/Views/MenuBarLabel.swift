@@ -136,9 +136,7 @@ enum MenuBarLabelRenderer {
                 return nil
             }
 
-            let attachment = NSTextAttachment()
-            attachment.attachmentCell = NSTextAttachmentCell(imageCell: image)
-            return NSAttributedString(attachment: attachment)
+            return attributedAttachment(for: image)
         case let .glyph(glyph):
             return NSAttributedString(
                 string: glyph,
@@ -149,9 +147,7 @@ enum MenuBarLabelRenderer {
                 return nil
             }
 
-            let attachment = NSTextAttachment()
-            attachment.attachmentCell = NSTextAttachmentCell(imageCell: image)
-            return NSAttributedString(attachment: attachment)
+            return attributedAttachment(for: image)
         }
     }
 
@@ -209,6 +205,12 @@ enum MenuBarLabelRenderer {
         return tintedImage(from: fittedImage, color: color)
     }
 
+    private static func attributedAttachment(for image: NSImage) -> NSAttributedString {
+        let attachment = NSTextAttachment()
+        attachment.attachmentCell = BaselineAlignedAttachmentCell(imageCell: image)
+        return NSAttributedString(attachment: attachment)
+    }
+
     private static func resizedImage(_ image: NSImage, to size: NSSize) -> NSImage {
         let resized = NSImage(size: size)
         resized.lockFocus()
@@ -235,5 +237,12 @@ enum MenuBarLabelRenderer {
         tintedImage.unlockFocus()
         tintedImage.isTemplate = false
         return tintedImage
+    }
+}
+
+private final class BaselineAlignedAttachmentCell: NSTextAttachmentCell {
+    override func cellBaselineOffset() -> NSPoint {
+        let baselineOffset = super.cellBaselineOffset()
+        return NSPoint(x: baselineOffset.x, y: baselineOffset.y - 2)
     }
 }

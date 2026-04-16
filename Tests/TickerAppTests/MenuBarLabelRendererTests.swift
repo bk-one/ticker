@@ -36,6 +36,54 @@ struct MenuBarLabelRendererTests {
 
     @Test
     @MainActor
+    func assetBackedTickersRenderAsAttachmentsInsteadOfTextSymbols() async {
+        let ethQuote = MarketQuote(
+            symbol: "ETH-USD",
+            displayName: "Ethereum USD",
+            currentPrice: 2338,
+            previousClose: 2280,
+            currencyCode: "USD",
+            exchangeName: "CCC",
+            instrumentType: "CRYPTOCURRENCY",
+            asOf: Date(timeIntervalSince1970: 1_774_031_733),
+            intradayCloses: [2290, 2315, 2338],
+            priceHint: 2,
+            session: MarketSessionInfo(
+                state: .open,
+                exchangeTimeZoneIdentifier: nil,
+                source: .continuousTradingRule
+            )
+        )
+        let solQuote = MarketQuote(
+            symbol: "SOL-USD",
+            displayName: "Solana USD",
+            currentPrice: 86.67,
+            previousClose: 83.22,
+            currencyCode: "USD",
+            exchangeName: "CCC",
+            instrumentType: "CRYPTOCURRENCY",
+            asOf: Date(timeIntervalSince1970: 1_774_031_733),
+            intradayCloses: [83.2, 84.7, 86.67],
+            priceHint: 2,
+            session: MarketSessionInfo(
+                state: .open,
+                exchangeTimeZoneIdentifier: nil,
+                source: .continuousTradingRule
+            )
+        )
+
+        let store = makeStore(symbols: ["ETH-USD", "SOL-USD"], quotes: [ethQuote, solQuote])
+        await store.refresh()
+
+        let attributedTitle = MenuBarLabelRenderer.attributedTitle(for: store)
+
+        #expect(attachmentCount(in: attributedTitle) == 2)
+        #expect(!attributedTitle.string.contains("ETH-USD"))
+        #expect(!attributedTitle.string.contains("SOL-USD"))
+    }
+
+    @Test
+    @MainActor
     func unknownTickersFallBackToTextSymbols() async {
         let quote = MarketQuote(
             symbol: "IAU",

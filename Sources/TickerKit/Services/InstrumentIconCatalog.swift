@@ -8,8 +8,7 @@ public enum InstrumentIconCatalog {
     public static func assetURL(named name: String) -> URL? {
         Bundle.module.url(
             forResource: name,
-            withExtension: "png",
-            subdirectory: "logo-raster"
+            withExtension: "png"
         )
     }
 

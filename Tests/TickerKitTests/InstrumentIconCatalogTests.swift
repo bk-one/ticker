@@ -22,4 +22,10 @@ struct InstrumentIconCatalogTests {
     func returnsNilForUnknownTicker() {
         #expect(InstrumentIconCatalog.icon(for: "IAU") == nil)
     }
+
+    @Test
+    func returnsBundledAssetURLForAssetBackedTicker() {
+        #expect(InstrumentIconCatalog.assetURL(named: "ethereum") != nil)
+        #expect(InstrumentIconCatalog.assetURL(named: "solana") != nil)
+    }
 }
