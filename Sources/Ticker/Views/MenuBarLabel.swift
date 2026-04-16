@@ -131,6 +131,14 @@ enum MenuBarLabelRenderer {
         color: NSColor
     ) -> NSAttributedString? {
         switch icon.kind {
+        case let .asset(name):
+            guard let image = renderedBundledAsset(named: name, color: color) else {
+                return nil
+            }
+
+            let attachment = NSTextAttachment()
+            attachment.attachmentCell = NSTextAttachmentCell(imageCell: image)
+            return NSAttributedString(attachment: attachment)
         case let .glyph(glyph):
             return NSAttributedString(
                 string: glyph,
@@ -185,11 +193,45 @@ enum MenuBarLabelRenderer {
 
         let configuration = NSImage.SymbolConfiguration(pointSize: 12, weight: .bold)
         let configuredImage = image.withSymbolConfiguration(configuration) ?? image
-        let tintedImage = NSImage(size: configuredImage.size)
+        return tintedImage(from: configuredImage, color: color)
+    }
+
+    private static func renderedBundledAsset(
+        named name: String,
+        color: NSColor
+    ) -> NSImage? {
+        guard let url = InstrumentIconCatalog.assetURL(named: name),
+              let image = NSImage(contentsOf: url) else {
+            return nil
+        }
+
+        let fittedImage = resizedImage(image, to: NSSize(width: 14, height: 14))
+        return tintedImage(from: fittedImage, color: color)
+    }
+
+    private static func resizedImage(_ image: NSImage, to size: NSSize) -> NSImage {
+        let resized = NSImage(size: size)
+        resized.lockFocus()
+        image.draw(
+            in: NSRect(origin: .zero, size: size),
+            from: .zero,
+            operation: .copy,
+            fraction: 1
+        )
+        resized.unlockFocus()
+        resized.isTemplate = false
+        return resized
+    }
+
+    private static func tintedImage(
+        from image: NSImage,
+        color: NSColor
+    ) -> NSImage {
+        let tintedImage = NSImage(size: image.size)
         tintedImage.lockFocus()
-        configuredImage.draw(in: NSRect(origin: .zero, size: configuredImage.size))
+        image.draw(in: NSRect(origin: .zero, size: image.size))
         color.set()
-        NSRect(origin: .zero, size: configuredImage.size).fill(using: .sourceIn)
+        NSRect(origin: .zero, size: image.size).fill(using: .sourceIn)
         tintedImage.unlockFocus()
         tintedImage.isTemplate = false
         return tintedImage

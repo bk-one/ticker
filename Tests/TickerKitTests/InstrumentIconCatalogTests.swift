@@ -15,7 +15,7 @@ struct InstrumentIconCatalogTests {
         let googl = InstrumentIconCatalog.icon(for: "googl")
 
         #expect(goog == googl)
-        #expect(goog?.kind == .sfSymbol("g.circle.fill"))
+        #expect(goog?.kind == .asset("google"))
     }
 
     @Test

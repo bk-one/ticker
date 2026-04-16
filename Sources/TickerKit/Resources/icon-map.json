@@ -5,7 +5,7 @@
   },
   {
     "symbols": ["GOOG", "GOOGL"],
-    "icon": { "type": "sfSymbol", "value": "g.circle.fill" }
+    "icon": { "type": "asset", "value": "google" }
   },
   {
     "symbols": ["AMZN"],
@@ -17,31 +17,31 @@
   },
   {
     "symbols": ["META"],
-    "icon": { "type": "sfSymbol", "value": "infinity.circle.fill" }
+    "icon": { "type": "asset", "value": "meta" }
   },
   {
     "symbols": ["TSLA"],
-    "icon": { "type": "sfSymbol", "value": "bolt.fill" }
+    "icon": { "type": "asset", "value": "tesla" }
   },
   {
     "symbols": ["NFLX"],
-    "icon": { "type": "sfSymbol", "value": "play.rectangle.fill" }
+    "icon": { "type": "asset", "value": "netflix" }
   },
   {
     "symbols": ["SPOT"],
-    "icon": { "type": "sfSymbol", "value": "music.note.list" }
+    "icon": { "type": "asset", "value": "spotify" }
   },
   {
     "symbols": ["SHEL"],
-    "icon": { "type": "sfSymbol", "value": "fuelpump.fill" }
+    "icon": { "type": "asset", "value": "shell" }
   },
   {
     "symbols": ["NKE"],
-    "icon": { "type": "sfSymbol", "value": "figure.run" }
+    "icon": { "type": "asset", "value": "nike" }
   },
   {
     "symbols": ["SBUX"],
-    "icon": { "type": "sfSymbol", "value": "cup.and.saucer.fill" }
+    "icon": { "type": "asset", "value": "starbucks" }
   },
   {
     "symbols": ["AMGN"],
@@ -53,34 +53,34 @@
   },
   {
     "symbols": ["ETH-USD"],
-    "icon": { "type": "glyph", "value": "Ξ" }
+    "icon": { "type": "asset", "value": "ethereum" }
   },
   {
     "symbols": ["SOL-USD"],
-    "icon": { "type": "glyph", "value": "S" }
+    "icon": { "type": "asset", "value": "solana" }
   },
   {
     "symbols": ["XRP-USD"],
-    "icon": { "type": "sfSymbol", "value": "x.circle.fill" }
+    "icon": { "type": "asset", "value": "xrp" }
   },
   {
     "symbols": ["DOGE-USD"],
-    "icon": { "type": "glyph", "value": "Ð" }
+    "icon": { "type": "asset", "value": "dogecoin" }
   },
   {
     "symbols": ["GC=F"],
-    "icon": { "type": "sfSymbol", "value": "medal.fill" }
+    "icon": { "type": "asset", "value": "gold" }
   },
   {
     "symbols": ["SI=F"],
-    "icon": { "type": "glyph", "value": "Ag" }
+    "icon": { "type": "asset", "value": "silver" }
   },
   {
     "symbols": ["CL=F"],
-    "icon": { "type": "sfSymbol", "value": "drop.fill" }
+    "icon": { "type": "asset", "value": "oil" }
   },
   {
     "symbols": ["NG=F"],
-    "icon": { "type": "sfSymbol", "value": "flame.fill" }
+    "icon": { "type": "asset", "value": "gas" }
   }
 ]

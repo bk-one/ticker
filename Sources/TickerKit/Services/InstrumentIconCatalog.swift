@@ -5,6 +5,14 @@ public enum InstrumentIconCatalog {
         storage[normalized(symbol)]
     }
 
+    public static func assetURL(named name: String) -> URL? {
+        Bundle.module.url(
+            forResource: name,
+            withExtension: "png",
+            subdirectory: "logo-raster"
+        )
+    }
+
     private static let storage: [String: InstrumentIcon] = loadStorage()
 
     private static func loadStorage() -> [String: InstrumentIcon] {
@@ -47,6 +55,8 @@ private struct DecodedIcon: Decodable {
 
     var instrumentIcon: InstrumentIcon {
         switch type {
+        case "asset":
+            return InstrumentIcon(kind: .asset(value))
         case "sfSymbol":
             return InstrumentIcon(kind: .sfSymbol(value))
         case "glyph":
