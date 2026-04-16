@@ -202,7 +202,7 @@ enum MenuBarLabelRenderer {
         }
 
         let fittedImage = resizedImage(image, to: NSSize(width: 14, height: 14))
-        return tintedImage(from: fittedImage, color: color)
+        return maskedAssetImage(from: fittedImage, color: color)
     }
 
     private static func attributedAttachment(for image: NSImage) -> NSAttributedString {
@@ -237,6 +237,72 @@ enum MenuBarLabelRenderer {
         tintedImage.unlockFocus()
         tintedImage.isTemplate = false
         return tintedImage
+    }
+
+    private static func maskedAssetImage(
+        from image: NSImage,
+        color: NSColor
+    ) -> NSImage {
+        guard let cgImage = image.cgImage(
+            forProposedRect: nil,
+            context: nil,
+            hints: nil
+        ) else {
+            return tintedImage(from: image, color: color)
+        }
+
+        let width = cgImage.width
+        let height = cgImage.height
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        ), let tintColor = color.usingColorSpace(.sRGB) else {
+            return tintedImage(from: image, color: color)
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        guard let data = context.data else {
+            return tintedImage(from: image, color: color)
+        }
+
+        let red = Double(tintColor.redComponent)
+        let green = Double(tintColor.greenComponent)
+        let blue = Double(tintColor.blueComponent)
+        let bytes = data.bindMemory(to: UInt8.self, capacity: width * height * 4)
+
+        for offset in stride(from: 0, to: width * height * 4, by: 4) {
+            let sourceRed = Double(bytes[offset]) / 255
+            let sourceGreen = Double(bytes[offset + 1]) / 255
+            let sourceBlue = Double(bytes[offset + 2]) / 255
+            let sourceAlpha = Double(bytes[offset + 3]) / 255
+            let luminance = (0.2126 * sourceRed) + (0.7152 * sourceGreen) + (0.0722 * sourceBlue)
+            let maskedAlpha = max(0, min(1, sourceAlpha * (1 - luminance)))
+
+            bytes[offset] = UInt8((red * maskedAlpha * 255).rounded())
+            bytes[offset + 1] = UInt8((green * maskedAlpha * 255).rounded())
+            bytes[offset + 2] = UInt8((blue * maskedAlpha * 255).rounded())
+            bytes[offset + 3] = UInt8((maskedAlpha * 255).rounded())
+        }
+
+        guard let maskedCGImage = context.makeImage() else {
+            return tintedImage(from: image, color: color)
+        }
+
+        let maskedImage = NSImage(
+            cgImage: maskedCGImage,
+            size: NSSize(width: width, height: height)
+        )
+        maskedImage.isTemplate = false
+        return maskedImage
     }
 }
 
